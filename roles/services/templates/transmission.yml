@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: transmission
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission
+  template:
+    metadata:
+      labels:
+        app: transmission
+    spec:
+      containers:
+        - name: transmission
+          image: lscr.io/linuxserver/transmission:latest
+          ports:
+            - containerPort: 9091
+            - containerPort: 51413
+            - containerPort: 51413
+              protocol: UDP
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: Europe/Berlin
+          volumeMounts:
+            - mountPath: /config
+              subPath: config
+              name: transmission-data
+            - mountPath: /downloads
+              subPath: downloads
+              name: transmission-data
+            - mountPath: /watch
+              subPath: watch
+              name: transmission-data
+      volumes:
+        - name: transmission-data
+          persistentVolumeClaim:
+            claimName: transmission-pvc
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: transmission
+spec:
+  type: NodePort
+  ports:
+    - port: 9091
+      targetPort: 9091
+  selector:
+    app: transmission
