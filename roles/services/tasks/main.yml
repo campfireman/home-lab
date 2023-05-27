@@ -1,0 +1,110 @@
+---
+- name: Ensure pip is installed
+  apt:
+    name: python3-pip
+    state: present
+  become: yes
+
+- name: Install Python kubernetes client
+  pip:
+    name: kubernetes
+    state: present
+
+- name: Create Grafana namespace
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: grafana
+
+- name: Create Grafana Deployment
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: grafana
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: grafana
+        labels:
+          app: grafana
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: grafana
+        template:
+          metadata:
+            labels:
+              app: grafana
+          spec:
+            containers:
+              - name: grafana
+                image: grafana/grafana:latest
+                ports:
+                  - containerPort: 3000
+
+- name: Create Grafana Service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: grafana
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: grafana-service
+      spec:
+        selector:
+          app: grafana
+        ports:
+          - protocol: TCP
+            port: 80
+            targetPort: 3000
+
+- name: Create a namespace for ingress resources
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: ingress-nginx
+
+- name: Apply Nginx Ingress Controller
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition: "{{ lookup('url', 'https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.4/deploy/static/provider/baremetal/deploy.yaml', split_lines=False) }}"
+
+- name: Create an Ingress for the Grafana service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: grafana
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        annotations:
+          nginx.ingress.kubernetes.io/use-regex: "true"
+          nginx.ingress.kubernetes.io/rewrite-target: /$2
+        name: grafana-ingress
+      spec:
+        ingressClassName: nginx
+        rules:
+          - host: cluster
+            http:
+              paths:
+                - path: /grafana(/|$)(.*)
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: grafana-service
+                      port:
+                        number: 80
