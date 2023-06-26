@@ -42,6 +42,8 @@
         namespace: kube-system
         annotations:
           kubernetes.io/ingress.class: traefik
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
       spec:
         rules:
           - host: traefik.cluster
@@ -54,3 +56,7 @@
                       name: traefik-dashboard
                       port:
                         number: 9000
+        tls:
+          - secretName: traefik-dashboard-tls
+            hosts:
+              - traefik.cluster

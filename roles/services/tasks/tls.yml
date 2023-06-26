@@ -1,0 +1,41 @@
+---
+- name: Create Cert-Manager
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition: "{{ lookup('url', 'https://github.com/jetstack/cert-manager/releases/download/v1.11.4/cert-manager.yaml', split_lines=False) }}"
+
+- name: Create Letsencrypt ClusterIssuer
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: letsencrypt-prod
+      spec:
+        acme:
+          email: admin@ture.dev
+          server: https://acme-v02.api.letsencrypt.org/directory
+          privateKeySecretRef:
+            name: letsencrypt-prod
+          solvers:
+            - http01:
+                ingress:
+                  class: traefik
+
+- name: Create the traefik https redirect middleware
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: kube-system
+    definition:
+      apiVersion: traefik.containo.us/v1alpha1
+      kind: Middleware
+      metadata:
+        name: redirect-https
+      spec:
+        redirectScheme:
+          scheme: https
+          permanent: true
