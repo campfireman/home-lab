@@ -24,6 +24,36 @@
             - http01:
                 ingress:
                   class: traefik
+- debug:
+    msg: "CERT IS: {{ internal_ca_key }}"
+
+- name: Create internal CA Secrets
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: cert-manager
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: internal-ca
+      data:
+        tls.crt: "{{ internal_ca_cert }}"
+        tls.key: "{{ internal_ca_key }}"
+
+- name: Create internal CA ClusterIssuer
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: cert-manager
+    definition:
+      apiVersion: cert-manager.io/v1
+      kind: ClusterIssuer
+      metadata:
+        name: internal-issuer
+      spec:
+        ca:
+          secretName: internal-ca
 
 - name: Create the traefik https redirect middleware
   k8s:

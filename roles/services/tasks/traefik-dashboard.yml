@@ -42,11 +42,11 @@
         namespace: kube-system
         annotations:
           kubernetes.io/ingress.class: traefik
-          cert-manager.io/cluster-issuer: letsencrypt-prod
+          cert-manager.io/cluster-issuer: internal-issuer
           traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
       spec:
         rules:
-          - host: traefik.cluster
+          - host: traefik.{{ domain }}
             http:
               paths:
                 - path: /
@@ -59,4 +59,4 @@
         tls:
           - secretName: traefik-dashboard-tls
             hosts:
-              - traefik.cluster
+              - traefik.{{ domain }}
