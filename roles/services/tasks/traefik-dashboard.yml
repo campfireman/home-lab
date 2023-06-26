@@ -1,0 +1,56 @@
+---
+- name: Create Traefik Helm Config
+  ansible.builtin.template:
+    src: templates/traefik-helm-config.yml
+    dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
+
+- name: Create Traefik Dashboard Service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: kube-system
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: traefik-dashboard
+        namespace: kube-system
+        labels:
+          app.kubernetes.io/instance: traefik
+          app.kubernetes.io/name: traefik-dashboard
+      spec:
+        type: ClusterIP
+        ports:
+          - name: traefik
+            port: 9000
+            targetPort: traefik
+            protocol: TCP
+        selector:
+          app.kubernetes.io/instance: traefik-kube-system
+          app.kubernetes.io/name: traefik
+
+- name: Create Traefik Dashboard ingress
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: kube-system
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: traefik-ingress
+        namespace: kube-system
+        annotations:
+          kubernetes.io/ingress.class: traefik
+      spec:
+        rules:
+          - host: traefik.cluster
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: traefik-dashboard
+                      port:
+                        number: 9000
