@@ -24,8 +24,6 @@
             - http01:
                 ingress:
                   class: traefik
-- debug:
-    msg: "CERT IS: {{ internal_ca_key }}"
 
 - name: Create internal CA Secrets
   k8s:
