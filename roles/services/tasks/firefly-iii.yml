@@ -20,7 +20,7 @@
       metadata:
         name: firefly-secrets
       data:
-        DB_PASSWORD: "{{ firefly_iii_postres_password|b64encode }}"
+        DB_PASSWORD: "{{ postgres_password|b64encode }}"
         DB_ADMIN_PASSWORD: "{{ firefly_iii_postres_admin_password|b64encode }}"
         APP_KEY: "{{ firefly_iii_app_key|b64encode }}"
 
@@ -60,31 +60,3 @@
               TZ: "Europe/Berlin"
               TRUSTED_PROXIES: "**"
             existingSecret: firefly-secrets
-
-- name: Create Firefly-III Database
-  k8s:
-    kubeconfig: /home/{{ ansible_user }}/.kube/config
-    state: present
-    namespace: firefly
-    definition:
-      apiVersion: helm.cattle.io/v1
-      kind: HelmChart
-      metadata:
-        name: firefly-database
-      spec:
-        repo: https://charts.bitnami.com/bitnami
-        chart: postgresql
-        valuesContent: |-
-          image:
-            tag: 15.3.0-debian-11-r17
-          auth:
-            username: firefly
-            database: firefly
-            existingSecret: firefly-secrets 
-            secretKeys:
-              adminPasswordKey: DB_ADMIN_PASSWORD
-              userPasswordKey: DB_PASSWORD
-          primary:
-            persistence:
-              storageClass: local-path
-              size: 20Gi

@@ -1,0 +1,117 @@
+---
+- name: Create Postgres Namespace
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: postgres
+
+- name: Create Postgres ConfigMap
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: postgres
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: postgres-config
+        labels:
+          app: postgres
+      data:
+        POSTGRES_DB: "{{ postgres_shared_database }}"
+        POSTGRES_USER: "{{ postgres_shared_username }}"
+        PGDATA: "{{ postgres_shared_data_directory }}/pgdata"
+
+- name: Create Postgres Secrets
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: postgres
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: postgres-secrets
+      data:
+        POSTGRES_PASSWORD: "{{ postgres_shared_password|b64encode }}"
+        POSTGRES_ADMIN_PASSWORD: "{{ postgres_shared_admin_password|b64encode }}"
+
+- name: Create Postgres persistent volume claim
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: postgres
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: postgres-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+
+- name: Create Postgres Service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: postgres
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: postgres-service
+        labels:
+          app: postgres
+      spec:
+        type: NodePort
+        ports:
+          - port: 5432
+        selector:
+        app: postgres
+
+- name: Create Postgres StatefulSet
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: postgres
+    definition:
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: postgres
+      spec:
+        selector:
+          matchLabels:
+            app: postgres
+        serviceName: "postgres"
+        replicas: 1
+        template:
+          metadata:
+            labels:
+              app: postgres
+          spec:
+            containers:
+              - name: postgres
+                image: postgres:15.3
+                imagePullPolicy: "IfNotPresent"
+                ports:
+                  - containerPort: 5432
+                envFrom:
+                  - secretRef:
+                      name: postgres-secrets
+                  - configMapRef:
+                      name: postgres-config
+                volumeMounts:
+                  - name: postgres-pv
+                    mountPath: "{{ postgres_shared_data_directory }}"
+            volumes:
+              - name: postgres-pv
+                persistentVolumeClaim:
+                  claimName: postgres-pvc
