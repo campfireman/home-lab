@@ -14,3 +14,6 @@ deploy: install-requirements
 
 deploy-services: install-requirements
 	ansible-playbook site.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K -t services
+
+deploy-master-infra: install-requirements
+	ansible-playbook site.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K -t master-infra

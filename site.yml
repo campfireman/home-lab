@@ -20,6 +20,12 @@
   become: yes
   roles:
     - role: master-infra
-    # - role: services
+  tags:
+    - master-infra
+
+- hosts: master
+  become: yes
+  roles:
+    - role: services
   tags:
     - services
