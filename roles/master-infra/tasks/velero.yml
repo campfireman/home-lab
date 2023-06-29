@@ -1,0 +1,64 @@
+---
+- name: Download Velero CLI
+  get_url:
+    url: https://github.com/vmware-tanzu/velero/releases/download/v1.10.3/{{ velero_version }}.tar.gz
+    dest: /tmp/velero.tar.gz
+    mode: 0755
+
+- name: Extract Velero binary
+  unarchive:
+    src: /tmp/velero.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Move Velero binary to /usr/local/bin
+  command: mv /tmp/{{ velero_version }}/velero /usr/local/bin/
+
+- name: Set executable permissions on Velero binary
+  file:
+    path: /usr/local/bin/velero
+    mode: "0755"
+
+- name: Remove intermediate velero folder
+  file:
+    path: /tmp/{{ velero_version }}
+    state: absent
+
+- name: Create Velero Namespace
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: velero
+
+- name: Create minio for evaluation
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: velero
+    definition: "{{ lookup('file', 'templates/minio.yml') }}"
+
+- name: Create minio credentials for evaluation
+  ansible.builtin.copy:
+    dest: "/home/{{ ansible_user }}/credentials-velero"
+    content: |
+      [default]
+      aws_access_key_id = minio
+      aws_secret_access_key = minio123
+
+- name: Install Velero
+  shell:
+    cmd: >
+      velero install \
+        --kubeconfig /home/{{ ansible_user }}/.kube/config \
+        --provider aws \
+        --plugins velero/velero-plugin-for-aws:v1.2.1 \
+        --bucket velero \
+        --secret-file ./credentials-velero \
+        --use-volume-snapshots=false \
+        --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://minio.velero.svc:9000
+  args:
+    executable: /bin/bash

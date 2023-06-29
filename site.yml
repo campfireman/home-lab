@@ -19,6 +19,7 @@
 - hosts: master
   become: yes
   roles:
-    - role: services
+    - role: master-infra
+    # - role: services
   tags:
     - services
