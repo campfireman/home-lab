@@ -34,31 +34,28 @@
       metadata:
         name: velero
 
-- name: Create minio for evaluation
-  k8s:
-    kubeconfig: /home/{{ ansible_user }}/.kube/config
-    state: present
-    namespace: velero
-    definition: "{{ lookup('file', 'templates/minio.yml') }}"
-
-- name: Create minio credentials for evaluation
-  ansible.builtin.copy:
-    dest: "/home/{{ ansible_user }}/credentials-velero"
-    content: |
-      [default]
-      aws_access_key_id = minio
-      aws_secret_access_key = minio123
+- name: Create temporary File for Velero SA Key
+  copy:
+    dest: "{{ velero_gcp_sa_key_temporary_location }}"
+    content: "{{ velero_gcp_sa_key }}"
+    mode: "0600"
 
 - name: Install Velero
   shell:
     cmd: >
       velero install \
         --kubeconfig /home/{{ ansible_user }}/.kube/config \
-        --provider aws \
-        --plugins velero/velero-plugin-for-aws:v1.2.1 \
-        --bucket velero \
-        --secret-file ./credentials-velero \
+        --provider gcp \
+        --plugins velero/velero-plugin-for-gcp:v1.7.0 \
+        --bucket {{ velero_gcp_bucket }} \
         --use-volume-snapshots=false \
-        --backup-location-config region=minio,s3ForcePathStyle="true",s3Url=http://minio.velero.svc:9000
+        --use-node-agent \
+        --default-volumes-to-fs-backup \
+        --secret-file {{ velero_gcp_sa_key_temporary_location }}
   args:
     executable: /bin/bash
+
+- name: Remove temporary SA Key File
+  file:
+    path: "{{ velero_gcp_sa_key_temporary_location }}"
+    state: absent
