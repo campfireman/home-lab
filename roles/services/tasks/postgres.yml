@@ -74,7 +74,7 @@
         ports:
           - port: 5432
         selector:
-        app: postgres
+          app: postgres
 
 - name: Create Postgres StatefulSet
   k8s:
