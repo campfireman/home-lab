@@ -37,7 +37,7 @@
       metadata:
         name: miniflux-secrets
       data:
-        DATABASE_URL: "{{ ('postgres://' + postgres_shared_username + ':' + postgres_shared_password + '@postgres-service.postgres.svc.cluster.local/' + postgres_shared_database + '?sslmode=disable') | b64encode }}"
+        DATABASE_URL: "{{ ('postgres://' + postgres_shared_username + ':' + postgres_shared_password + '@postgres-service.postgres.svc.cluster.local/' + miniflux_database + '?sslmode=disable') | b64encode }}"
         ADMIN_PASSWORD: "{{ miniflux_admin_password|b64encode }}"
 
 - name: Create Miniflux Service
