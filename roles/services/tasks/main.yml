@@ -2,6 +2,7 @@
 - include_tasks: pip-kubernetes.yml
 - include_tasks: tls.yml
 - include_tasks: postgres.yml
+- include_tasks: pgadmin.yml
 - include_tasks: grafana.yml
 - include_tasks: traefik-dashboard.yml
 - include_tasks: miniflux.yml

@@ -1,0 +1,182 @@
+---
+- name: Create pgadmin namespace
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: pgadmin
+
+- name: Create pgadmin password secret
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      apiVersion: v1
+      kind: Secret
+      type: Opaque
+      metadata:
+        name: pgadmin-secrets
+      data:
+        pgadmin-password: "{{ pgadmin_password | b64encode }}"
+
+- name: Create pgadmin ConfigMap
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: pgadmin-config
+      data:
+        servers.json: "{{ lookup('template', 'pgadmin-servers.json.j2') | to_json }}"
+
+- name: Create pgadmin persistent volume claim
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: pgadmin-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 5Gi
+
+- name: Create pgadmin Deployment
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: pgadmin
+        labels:
+          app: pgadmin
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app: pgadmin
+        template:
+          metadata:
+            labels:
+              app: pgadmin
+          spec:
+            terminationGracePeriodSeconds: 10
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+            containers:
+              - name: pgadmin
+                image: dpage/pgadmin4:latest
+                env:
+                  - name: PGADMIN_DEFAULT_EMAIL
+                    value: admin@ture.dev
+                  - name: PGADMIN_DEFAULT_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: pgadmin-secrets
+                        key: pgadmin-password
+                ports:
+                  - name: http
+                    containerPort: 80
+                    protocol: TCP
+                readinessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /
+                    port: 80
+                    scheme: HTTP
+                  initialDelaySeconds: 30
+                  periodSeconds: 30
+                  successThreshold: 1
+                  timeoutSeconds: 2
+                livenessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 30
+                  periodSeconds: 10
+                  successThreshold: 1
+                  tcpSocket:
+                    port: 80
+                  timeoutSeconds: 1
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 750Mi
+                volumeMounts:
+                  - name: pgadmin-config
+                    mountPath: /pgadmin4/servers.json
+                    subPath: servers.json
+                    readOnly: true
+                  - name: pgadmin-pv
+                    mountPath: /var/lib/pgadmin
+            volumes:
+              - name: pgadmin-config
+                configMap:
+                  name: pgadmin-config
+              - name: pgadmin-pv
+                persistentVolumeClaim:
+                  claimName: pgadmin-pvc
+
+- name: Create pgadmin Service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: pgadmin-service
+      spec:
+        selector:
+          app: pgadmin
+        ports:
+          - port: 80
+            protocol: TCP
+            targetPort: 80
+
+- name: Create an Ingress for the pgadmin service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: pgadmin
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: pgadmin-ingress
+        annotations:
+          kubernetes.io/ingress.class: "traefik"
+          cert-manager.io/cluster-issuer: internal-issuer
+          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+      spec:
+        rules:
+          - host: pgadmin.{{ domain }}
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: pgadmin-service
+                      port:
+                        number: 80
+        tls:
+          - secretName: pgadmin-tls
+            hosts:
+              - pgadmin.{{ domain }}
