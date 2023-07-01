@@ -59,3 +59,19 @@
   file:
     path: "{{ velero_gcp_sa_key_temporary_location }}"
     state: absent
+
+- name: Create Velero Backup Schedule
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: velero
+    definition:
+      apiVersion: velero.io/v1
+      kind: Schedule
+      metadata:
+        name: full-cluster-backup
+      spec:
+        schedule: 0 3 * * *
+        template:
+          includeClusterResources: true
+          storageLocation: default
