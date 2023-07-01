@@ -82,7 +82,8 @@
               runAsGroup: 0
             containers:
               - name: pgadmin
-                image: dpage/pgadmin4:latest
+                image: dpage/pgadmin4:7.4
+                imagePullPolicy: "IfNotPresent"
                 env:
                   - name: PGADMIN_DEFAULT_EMAIL
                     value: admin@ture.dev

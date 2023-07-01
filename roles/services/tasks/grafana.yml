@@ -53,7 +53,8 @@
               fsGroup: 472
             containers:
               - name: grafana
-                image: grafana/grafana:latest
+                image: grafana/grafana:10.0.1
+                imagePullPolicy: "IfNotPresent"
                 ports:
                   - containerPort: 3000
                 readinessProbe:
