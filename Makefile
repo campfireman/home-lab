@@ -10,7 +10,7 @@ reset: install-requirements
 	ansible-playbook reset.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K
 
 deploy: install-requirements
-	ansible-playbook site.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K	
+	ansible-playbook site.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K
 
 deploy-services: install-requirements
 	ansible-playbook site.yml  --vault-password-file=~/.ansible-vault-password -i inventory/home-lab/hosts.ini -K -t services
