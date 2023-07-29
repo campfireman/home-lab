@@ -1,0 +1,383 @@
+---
+- name: Create recipes namespace
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: recipes
+
+- name: Create recipes ConfigMap
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        labels:
+          app: recipes
+        name: recipes-nginx-config
+      data:
+        nginx-config: |-
+          events {
+            worker_connections 1024;
+          }
+          http {
+            include mime.types;
+            server {
+              listen 80;
+              server_name _;
+
+              client_max_body_size 16M;
+
+              # serve static files
+              location /static/ {
+                alias /static/;
+              }
+              # serve media files
+              location /media/ {
+                alias /media/;
+              }
+            }
+          }
+
+- name: Create recipes ConfigMap
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: recipes
+      type: Opaque
+      data:
+        postgresql-postgres-password: "{{ postgres_shared_password | b64encode }}"
+        # echo -n 'secret-key' | sha256sum | awk '{ printf $1 }'
+        secret-key: "{{ recipes_secret_key | b64encode }}"
+
+- name: Create recipes ServiceAccount
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: recipes
+
+- name: Create recipes Recipe Media PVC
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: recipes-media
+        labels:
+          app: recipes
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 10Gi
+
+- name: Create recipes static Recipe PVC
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: recipes-static
+        labels:
+          app: recipes
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 5Gi
+
+- name: Create recipes static Recipe PVC
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: recipes
+        labels:
+          app: recipes
+          environment: production
+          tier: frontend
+      spec:
+        replicas: 1
+        strategy:
+          type: Recreate
+        selector:
+          matchLabels:
+            app: recipes
+            environment: production
+        template:
+          metadata:
+            annotations:
+              backup.velero.io/backup-volumes: media,static
+            labels:
+              app: recipes
+              tier: frontend
+              environment: production
+          spec:
+            restartPolicy: Always
+            serviceAccount: recipes
+            serviceAccountName: recipes
+            initContainers:
+              - name: init-chmod-data
+                env:
+                  - name: SECRET_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: recipes
+                        key: secret-key
+                  - name: DB_ENGINE
+                    value: django.db.backends.postgresql_psycopg2
+                  - name: POSTGRES_HOST
+                    value: postgres-service.postgres.svc.cluster.local
+                  - name: POSTGRES_PORT
+                    value: "5432"
+                  - name: POSTGRES_USER
+                    value: "{{ postgres_shared_username }}"
+                  - name: POSTGRES_DB
+                    value: recipes
+                  - name: POSTGRES_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: recipes
+                        key: postgresql-postgres-password
+                image: vabene1111/recipes
+                imagePullPolicy: Always
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 64Mi
+                command:
+                  - sh
+                  - -c
+                  - |
+                    set -e
+                    source venv/bin/activate
+                    echo "Updating database"
+                    python manage.py migrate
+                    python manage.py collectstatic_js_reverse
+                    python manage.py collectstatic --noinput
+                    echo "Setting media file attributes"
+                    chown -R 65534:65534 /opt/recipes/mediafiles
+                    find /opt/recipes/mediafiles -type d | xargs -r chmod 755
+                    find /opt/recipes/mediafiles -type f | xargs -r chmod 644
+                    echo "Done"
+                securityContext:
+                  runAsUser: 0
+                volumeMounts:
+                  - mountPath: /opt/recipes/mediafiles
+                    name: media
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+                  - mountPath: /opt/recipes/staticfiles
+                    name: static
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+            containers:
+              - name: recipes-nginx
+                image: nginx:latest
+                imagePullPolicy: IfNotPresent
+                ports:
+                  - containerPort: 80
+                    protocol: TCP
+                    name: http
+                  - containerPort: 8080
+                    protocol: TCP
+                    name: gunicorn
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 64Mi
+                volumeMounts:
+                  - mountPath: /media
+                    name: media
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+                  - mountPath: /static
+                    name: static
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+                  - name: nginx-config
+                    mountPath: /etc/nginx/nginx.conf
+                    subPath: nginx-config
+                    readOnly: true
+              - name: recipes
+                image: vabene1111/recipes
+                imagePullPolicy: IfNotPresent
+                command:
+                  - /opt/recipes/venv/bin/gunicorn
+                  - -b
+                  - :8080
+                  - --access-logfile
+                  - "-"
+                  - --error-logfile
+                  - "-"
+                  - --log-level
+                  - INFO
+                  - recipes.wsgi
+                livenessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /
+                    port: 8080
+                    scheme: HTTP
+                  periodSeconds: 30
+                readinessProbe:
+                  httpGet:
+                    path: /
+                    port: 8080
+                    scheme: HTTP
+                  periodSeconds: 30
+                resources:
+                  requests:
+                    cpu: 250m
+                    memory: 64Mi
+                volumeMounts:
+                  - mountPath: /opt/recipes/mediafiles
+                    name: media
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+                  - mountPath: /opt/recipes/staticfiles
+                    name: static
+                    # mount as subPath due to lost+found on ext4 pvc
+                    subPath: files
+                env:
+                  - name: DEBUG
+                    value: "0"
+                  - name: ALLOWED_HOSTS
+                    value: "*"
+                  - name: SECRET_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: recipes
+                        key: secret-key
+                  - name: GUNICORN_MEDIA
+                    value: "0"
+                  - name: DB_ENGINE
+                    value: django.db.backends.postgresql_psycopg2
+                  - name: POSTGRES_HOST
+                    value: postgres-service.postgres.svc.cluster.local
+                  - name: POSTGRES_PORT
+                    value: "5432"
+                  - name: POSTGRES_USER
+                    value: "{{ postgres_shared_username }}"
+                  - name: POSTGRES_DB
+                    value: recipes
+                  - name: POSTGRES_PASSWORD
+                    valueFrom:
+                      secretKeyRef:
+                        name: recipes
+                        key: postgresql-postgres-password
+                securityContext:
+                  runAsUser: 65534
+            volumes:
+              - name: media
+                persistentVolumeClaim:
+                  claimName: recipes-media
+              - name: static
+                persistentVolumeClaim:
+                  claimName: recipes-static
+              - name: nginx-config
+                configMap:
+                  name: recipes-nginx-config
+
+- name: Create recipes Service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: recipes-service
+        labels:
+          app: recipes
+          tier: frontend
+      spec:
+        selector:
+          app: recipes
+          tier: frontend
+          environment: production
+        ports:
+          - port: 80
+            targetPort: http
+            name: http
+            protocol: TCP
+          - port: 8080
+            targetPort: gunicorn
+            name: gunicorn
+            protocol: TCP
+
+- name: Create an Ingress for the recipes service
+  k8s:
+    kubeconfig: /home/{{ ansible_user }}/.kube/config
+    state: present
+    namespace: recipes
+    definition:
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: recipes-ingress
+        annotations:
+          kubernetes.io/ingress.class: "traefik"
+          cert-manager.io/cluster-issuer: internal-issuer
+          traefik.ingress.kubernetes.io/router.middlewares: kube-system-redirect-https@kubernetescrd
+      spec:
+        rules:
+          - host: recipes.{{ domain }}
+            http:
+              paths:
+                - path: /
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: recipes-service
+                      port:
+                        number: 8080
+                - path: /media
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: recipes-service
+                      port:
+                        number: 80
+                - path: /static
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: recipes-service
+                      port:
+                        number: 80
+        tls:
+          - secretName: recipes-tls
+            hosts:
+              - recipes.{{ domain }}
