@@ -3,4 +3,4 @@
   k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
-    src: https://raw.githubusercontent.com/longhorn/longhorn/v1.4.1/deploy/longhorn.yaml
+    src: https://raw.githubusercontent.com/longhorn/longhorn/v1.4.3/deploy/longhorn.yaml
