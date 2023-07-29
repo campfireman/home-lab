@@ -72,6 +72,7 @@
         name: full-cluster-backup
       spec:
         schedule: 0 3 * * *
+        ttl: 7d
         template:
           includeClusterResources: true
           storageLocation: default
