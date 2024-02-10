@@ -2,3 +2,4 @@
 - include_tasks: pip-kubernetes.yml
 - include_tasks: longhorn.yml
 - include_tasks: velero.yml
+- include_tasks: deployer-service-account.yml

@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 BACKUP_NAME=full-cluster-backup-manual-$(shell date +'%Y-%m-%d--%H-%M-%S')
 VAULT_PASSWORD_PATH=~/.ansible-vault-password
 INVENTORY_PATH=./inventory/home-lab/hosts.ini
@@ -29,6 +31,15 @@ deploy-services: install-requirements
 
 deploy-master-infra: install-requirements
 	$(call playbook_with_tag, master-infra)
+
+terraform-init:
+	./scripts/terraform.sh init terraform
+
+terraform-plan: terraform-init
+	./scripts/terraform.sh plan terraform deployer_service_account_token="$$(cat /tmp/token)"
+
+terraform-apply: terraform-init
+	./scripts/terraform.sh apply terraform deployer_service_account_token="$$(cat /tmp/token)"
 
 cluster-backup:
 	ssh -t ture@192.168.1.67 "sudo velero backup create ${BACKUP_NAME} --kubeconfig=/home/home-lab/.kube/config --wait && \

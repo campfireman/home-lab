@@ -7,3 +7,11 @@ spec:
   valuesContent: |-
     dashboard:
       enabled: true
+    additionalArguments:
+    - "--entryPoints.mqtt.address=:1883/tcp"
+    ports:
+      mqtt:
+        port: 1883
+        expose: true
+        exposedPort: 1883
+        protocol: TCP
