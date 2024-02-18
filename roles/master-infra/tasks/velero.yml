@@ -46,7 +46,7 @@
       velero install \
         --kubeconfig /home/{{ ansible_user }}/.kube/config \
         --provider gcp \
-        --plugins velero/velero-plugin-for-gcp:v1.7.0 \
+        --plugins velero/velero-plugin-for-gcp:v1.9.0 \
         --bucket {{ velero_gcp_bucket }} \
         --use-volume-snapshots=false \
         --use-node-agent \
