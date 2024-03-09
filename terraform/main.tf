@@ -12,6 +12,10 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 2.12.1"
     }
+    sops = {
+      source  = "carlpett/sops"
+      version = "1.0.0"
+    }
   }
 }
 
@@ -34,3 +38,5 @@ provider "helm" {
     insecure = true
   }
 }
+
+provider "sops" {}
