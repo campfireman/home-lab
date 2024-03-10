@@ -1,0 +1,10 @@
+{
+    "auths": {
+        "https://registry.gitlab.com": {
+            "username":"{{ gitlab_registry_username }}",
+            "password":"{{ gitlab_registry_password }}",
+            "email":"{{ gitlab_registry_email }}",
+            "auth":"{{ (gitlab_registry_username + ':' + gitlab_registry_password) | b64encode }}"
+        }
+    }
+}
