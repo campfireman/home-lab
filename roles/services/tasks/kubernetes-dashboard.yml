@@ -14,7 +14,7 @@
 
 ---
 - name: Create Kubernetes-Dashboard Namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -24,7 +24,7 @@
         name: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard Service Account
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -37,7 +37,7 @@
         name: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -56,7 +56,7 @@
           app: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -70,7 +70,7 @@
         namespace: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard CSRF Secret
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -87,7 +87,7 @@
         csrf: ""
 
 - name: Create Kubernetes-Dashboard Key Holder Secret
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -102,7 +102,7 @@
       type: Opaque
 
 - name: Create Kubernetes-Dashboard RBAC
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -144,7 +144,7 @@
           verbs: ["get"]
 
 - name: Create Kubernetes-Dashboard RBAC Cluster
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -162,7 +162,7 @@
           verbs: ["get", "list", "watch"]
 
 - name: Create Kubernetes-Dashboard RoleBinding
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -183,7 +183,7 @@
           namespace: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard ClusterRoleBinding
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -203,7 +203,7 @@
           namespace: kubernetes-dashboard
 
 - name: Create Kubernetes-Dashboard Deployment
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -266,7 +266,7 @@
                 effect: NoSchedule
 
 - name: Create an Ingress for the Kubernetes-Dashboard
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -297,7 +297,7 @@
               - kubernetes-dashboard.{{ domain }}
 
 - name: Create Metrics Scraper Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard
@@ -317,7 +317,7 @@
           app: dashboard-metrics-scraper
 
 - name: Create Metrics Scraper Deployment
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kubernetes-dashboard

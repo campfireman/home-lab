@@ -1,12 +1,12 @@
 ---
 - name: Create Cert-Manager
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition: "{{ lookup('url', 'https://github.com/jetstack/cert-manager/releases/download/v1.11.4/cert-manager.yaml', split_lines=False) }}"
 
 - name: Create Letsencrypt ClusterIssuer
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: cert-manager
@@ -27,7 +27,7 @@
                   class: traefik
 
 - name: Create internal CA Secret
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: cert-manager
@@ -41,7 +41,7 @@
         tls.key: "{{ internal_ca_key }}"
 
 - name: Create internal CA ClusterIssuer
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: cert-manager
@@ -55,7 +55,7 @@
           secretName: internal-ca
 
 - name: Create the traefik https redirect middleware
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kube-system

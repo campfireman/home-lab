@@ -1,6 +1,6 @@
 ---
 - name: Create Miniflux namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -10,7 +10,7 @@
         name: miniflux
 
 - name: Create Miniflux ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: miniflux
@@ -27,7 +27,7 @@
         ADMIN_USERNAME: admin
 
 - name: Create Miniflux Secrets
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: miniflux
@@ -41,7 +41,7 @@
         ADMIN_PASSWORD: "{{ miniflux_admin_password|b64encode }}"
 
 - name: Create Miniflux Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: miniflux
@@ -60,7 +60,7 @@
             targetPort: 8080
 
 - name: Create Miniflux Deployment
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: miniflux
@@ -116,7 +116,7 @@
                     memory: 750Mi
 
 - name: Create an Ingress for the Miniflux Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: miniflux

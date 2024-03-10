@@ -5,7 +5,7 @@
     dest: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
 
 - name: Create Traefik Dashboard Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kube-system
@@ -30,7 +30,7 @@
           app.kubernetes.io/name: traefik
 
 - name: Create Traefik Dashboard ingress
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: kube-system

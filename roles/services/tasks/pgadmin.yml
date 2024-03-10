@@ -1,6 +1,6 @@
 ---
 - name: Create pgadmin namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -10,7 +10,7 @@
         name: pgadmin
 
 - name: Create pgadmin password secret
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin
@@ -24,7 +24,7 @@
         pgadmin-password: "{{ pgadmin_password | b64encode }}"
 
 - name: Create pgadmin ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin
@@ -37,7 +37,7 @@
         servers.json: "{{ lookup('template', 'pgadmin-servers.json.j2') | to_json }}"
 
 - name: Create pgadmin persistent volume claim
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin
@@ -55,7 +55,7 @@
             storage: 5Gi
 
 - name: Create pgadmin Deployment
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin
@@ -134,7 +134,7 @@
                   claimName: pgadmin-pvc
 
 - name: Create pgadmin Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin
@@ -152,7 +152,7 @@
             targetPort: 80
 
 - name: Create an Ingress for the pgadmin service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: pgadmin

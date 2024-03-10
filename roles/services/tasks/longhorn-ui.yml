@@ -1,6 +1,6 @@
 ---
 - name: Create an Ingress for the Longhorn UI
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: longhorn-system

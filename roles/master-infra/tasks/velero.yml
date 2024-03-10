@@ -25,7 +25,7 @@
     state: absent
 
 - name: Create Velero Namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -61,7 +61,7 @@
     state: absent
 
 - name: Create Velero Backup Schedule
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: velero

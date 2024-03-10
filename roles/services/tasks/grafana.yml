@@ -1,6 +1,6 @@
 ---
 - name: Create Grafana namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -10,7 +10,7 @@
         name: grafana
 
 - name: Create Grafana persistent volume claim
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: grafana
@@ -28,7 +28,7 @@
             storage: 10Gi
 
 - name: Create Grafana Deployment
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: grafana
@@ -88,7 +88,7 @@
                   claimName: grafana-pvc
 
 - name: Create Grafana Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: grafana
@@ -107,7 +107,7 @@
             targetPort: 3000
 
 - name: Create an Ingress for the Grafana service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: grafana

@@ -1,6 +1,6 @@
 ---
 - name: Install Longhorn
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     src: https://raw.githubusercontent.com/longhorn/longhorn/v1.6.0/deploy/longhorn.yaml

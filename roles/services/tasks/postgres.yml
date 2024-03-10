@@ -1,6 +1,6 @@
 ---
 - name: Create Postgres Namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -10,7 +10,7 @@
         name: postgres
 
 - name: Create Postgres ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: postgres
@@ -27,7 +27,7 @@
         PGDATA: "{{ postgres_shared_data_directory }}/pgdata"
 
 - name: Create Postgres Secrets
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: postgres
@@ -41,7 +41,7 @@
         POSTGRES_ADMIN_PASSWORD: "{{ postgres_shared_admin_password|b64encode }}"
 
 - name: Create Postgres persistent volume claim
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: postgres
@@ -59,7 +59,7 @@
             storage: 30Gi
 
 - name: Create Postgres Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: postgres
@@ -78,7 +78,7 @@
           app: postgres
 
 - name: Create Postgres StatefulSet
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: postgres

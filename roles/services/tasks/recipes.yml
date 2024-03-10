@@ -1,6 +1,6 @@
 ---
 - name: Create recipes namespace
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     definition:
@@ -10,7 +10,7 @@
         name: recipes
 
 - name: Create recipes ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -46,7 +46,7 @@
           }
 
 - name: Create recipes ConfigMap
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -62,7 +62,7 @@
         secret-key: "{{ recipes_secret_key | b64encode }}"
 
 - name: Create recipes ServiceAccount
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -73,7 +73,7 @@
         name: recipes
 
 - name: Create recipes Recipe Media PVC
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -93,7 +93,7 @@
             storage: 10Gi
 
 - name: Create recipes static Recipe PVC
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -113,7 +113,7 @@
             storage: 5Gi
 
 - name: Create recipes static Recipe PVC
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -310,7 +310,7 @@
                   name: recipes-nginx-config
 
 - name: Create recipes Service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
@@ -338,7 +338,7 @@
             protocol: TCP
 
 - name: Create an Ingress for the recipes service
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: /home/{{ ansible_user }}/.kube/config
     state: present
     namespace: recipes
