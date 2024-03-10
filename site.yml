@@ -1,31 +1,44 @@
 ---
-- hosts: k3s_cluster
+- name: "Install k3s"
+  hosts: k3s_cluster
   gather_facts: yes
   become: yes
   roles:
     - role: prereq
     - role: download
 
-- hosts: master
+- name: "Setup master node"
+  hosts: master
   become: yes
   roles:
     - role: k3s/master
 
-- hosts: node
+- name: "Setup nodes"
+  hosts: node
   become: yes
   roles:
     - role: k3s/node
 
-- hosts: master
+- name: "Setup infrastructure on master"
+  hosts: master
   become: yes
   roles:
     - role: master-infra
   tags:
     - master-infra
 
-- hosts: master
+- name: "Install services on k3s"
+  hosts: master
   become: yes
   roles:
     - role: services
   tags:
     - services
+
+- name: "Setup specifics on zimaboard"
+  hosts: zimaboard
+  become: yes
+  roles:
+    - role: zimaboard
+  tags:
+    - zimaboard

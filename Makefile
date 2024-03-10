@@ -32,6 +32,9 @@ deploy-services: install-requirements
 deploy-master-infra: install-requirements
 	$(call playbook_with_tag, master-infra)
 
+deploy-zimaboard: install-requirements
+	$(call playbook_with_tag, zimaboard)
+
 terraform-init:
 	./scripts/terraform.sh init terraform
 
