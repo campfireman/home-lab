@@ -9,9 +9,9 @@ resource "kubernetes_namespace" "transmission_namespace" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "transmission_pvc" {
+resource "kubernetes_persistent_volume_claim" "transmission_config_pvc" {
   metadata {
-    name      = "${local.transmission_name}-pvc"
+    name      = "${local.transmission_name}-config-pvc"
     namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
   }
   spec {
@@ -19,7 +19,7 @@ resource "kubernetes_persistent_volume_claim" "transmission_pvc" {
     storage_class_name = "longhorn"
     resources {
       requests = {
-        storage = "100Gi"
+        storage = "1Gi"
       }
     }
   }
@@ -112,20 +112,25 @@ resource "kubernetes_deployment" "transmission_deployment" {
             period_seconds        = 10
           }
           volume_mount {
-            name       = "${local.transmission_name}-data"
+            name       = "zimaboard-nfs-media"
             mount_path = "/data"
-            sub_path   = "${local.transmission_name}/data"
           }
           volume_mount {
-            name       = "${local.transmission_name}-data"
+            name       = "${local.transmission_name}-config"
             mount_path = "/config"
-            sub_path   = "${local.transmission_name}/config"
           }
         }
         volume {
-          name = "${local.transmission_name}-data"
+          name = "${local.transmission_name}-config"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.transmission_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim.transmission_config_pvc.metadata.0.name
+          }
+        }
+        volume {
+          name = "zimaboard-nfs-media"
+          nfs {
+            server = "192.168.1.67"
+            path   = "/var/nfs/media"
           }
         }
       }
