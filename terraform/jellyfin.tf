@@ -29,7 +29,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_config_pvc" {
     storage_class_name = "longhorn"
     resources {
       requests = {
-        storage = "10Gi"
+        storage = "100Gi"
       }
     }
   }
@@ -56,7 +56,7 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
       spec {
         container {
           name              = "${local.jellyfin_name}-container"
-          image             = "lscr.io/linuxserver/jellyfin:10.8.13-1-ls2"
+          image             = "lscr.io/linuxserver/jellyfin:10.8.13-1-ls6"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.jellyfin_port
