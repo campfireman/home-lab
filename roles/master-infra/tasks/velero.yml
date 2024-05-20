@@ -71,7 +71,7 @@
       metadata:
         name: full-cluster-backup
       spec:
-        schedule: 0 3 * * *
+        schedule: 0 3 * * 1
         ttl: 7d
         template:
           includeClusterResources: true
