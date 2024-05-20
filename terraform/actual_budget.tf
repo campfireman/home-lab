@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "actual_budget_deployment" {
       spec {
         container {
           name              = "${local.actual_budget_name}-container"
-          image             = "docker.io/actualbudget/actual-server:24.2.0"
+          image             = "docker.io/actualbudget/actual-server:24.5.0"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.actual_budget_port

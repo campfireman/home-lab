@@ -64,7 +64,7 @@ resource "kubernetes_stateful_set" "influx_db_deployment" {
       }
       spec {
         container {
-          image = "influxdb:2.7.5"
+          image = "influxdb:2.7.6"
           name  = local.influx_db_name
           port {
             container_port = local.influx_db_http_port
