@@ -56,7 +56,7 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
       spec {
         container {
           name              = "${local.jellyfin_name}-container"
-          image             = "lscr.io/linuxserver/jellyfin:10.8.13-1-ls6"
+          image             = "lscr.io/linuxserver/jellyfin:10.8.13-1-ls10"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.jellyfin_port
