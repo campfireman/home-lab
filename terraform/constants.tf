@@ -1,3 +1,4 @@
 locals {
-  domain = "cluster"
+  domain     = "cluster"
+  new_domain = "local"
 }
