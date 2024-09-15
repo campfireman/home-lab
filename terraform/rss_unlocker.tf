@@ -82,37 +82,14 @@ resource "kubernetes_service" "rss_unlocker_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "rss_unlocker_ingress" {
-  metadata {
-    name      = "${local.rss_unlocker_name}-ingress"
-    namespace = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
-    annotations = {
-      "kubernetes.io/ingress.class" = "traefik"
-      #   "cert-manager.io/cluster-issuer" = "internal-issuer"
-      #   "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
-  spec {
-    rule {
-      host = "${local.rss_unlocker_name}.${local.new_domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.rss_unlocker_service.metadata.0.name
-              port {
-                name = "http"
-              }
-            }
-          }
-        }
-      }
-    }
-    tls {
-      secret_name = "${local.rss_unlocker_name}-tls"
-      hosts       = ["${local.rss_unlocker_name}.${local.new_domain}"]
-    }
-  }
+module "rss_unlocker_ingress" {
+  source = "./modules/ingress"
+
+  name            = "${local.rss_unlocker_name}-ingress"
+  namespace       = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
+  host            = "${local.rss_unlocker_name}.${local.new_domain}"
+  service_name    = kubernetes_service.rss_unlocker_service.metadata[0].name
+  service_port    = kubernetes_service.rss_unlocker_service.spec[0].port[0].port
+  tls_config      = "NO_TLS"
+  tls_secret_name = "${local.rss_unlocker_name}-tls"
 }
