@@ -2,19 +2,19 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.3.0"
+      version = "~> 6.2.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.25.2"
+      version = "~> 2.32.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.12.1"
+      version = "~> 2.15.0"
     }
     sops = {
       source  = "carlpett/sops"
-      version = "1.0.0"
+      version = "1.1.1"
     }
   }
 }
