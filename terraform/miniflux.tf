@@ -36,26 +36,6 @@ resource "kubernetes_secret" "miniflux_secrets" {
   }
 }
 
-resource "kubernetes_service" "miniflux_service" {
-  metadata {
-    name      = "miniflux-service"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
-  }
-
-  spec {
-    selector = {
-      app = "miniflux"
-    }
-
-    port {
-      port        = 80
-      name        = "http"
-      protocol    = "TCP"
-      target_port = 8080
-    }
-  }
-}
-
 resource "kubernetes_deployment" "miniflux" {
   metadata {
     name      = "miniflux"
@@ -131,40 +111,34 @@ resource "kubernetes_deployment" "miniflux" {
   }
 }
 
-# Ingress
-resource "kubernetes_ingress_v1" "miniflux_ingress" {
+resource "kubernetes_service" "miniflux_service" {
   metadata {
-    name      = "miniflux-ingress"
+    name      = "miniflux-service"
     namespace = kubernetes_namespace.miniflux.metadata[0].name
-    annotations = {
-      "kubernetes.io/ingress.class"                      = "traefik"
-      "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
   }
 
   spec {
-    rule {
-      host = "miniflux.${local.new_domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.miniflux_service.metadata[0].name
-              port {
-                number = 80
-              }
-            }
-          }
-        }
-      }
+    selector = {
+      app = "miniflux"
     }
 
-    tls {
-      hosts       = ["miniflux.${local.new_domain}"]
-      secret_name = "miniflux-tls"
+    port {
+      port        = 80
+      name        = "http"
+      protocol    = "TCP"
+      target_port = 8080
     }
   }
+}
+
+module "miniflux_ingress" {
+  source = "./modules/ingress"
+
+  name            = "miniflux-ingress"
+  namespace       = kubernetes_namespace.miniflux.metadata[0].name
+  host            = "miniflux.${local.new_domain}"
+  service_name    = kubernetes_service.miniflux_service.metadata[0].name
+  service_port    = kubernetes_service.miniflux_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "miniflux-tls"
 }
