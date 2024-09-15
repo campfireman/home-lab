@@ -120,37 +120,14 @@ resource "kubernetes_service" "ollama_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "ollama_ingress" {
-  metadata {
-    name      = "${local.ollama_name}-ingress"
-    namespace = kubernetes_namespace.ollama_namespace.metadata.0.name
-    annotations = {
-      "kubernetes.io/ingress.class"                      = "traefik"
-      "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
-  spec {
-    rule {
-      host = "${local.ollama_name}.${local.new_domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.ollama_service.metadata.0.name
-              port {
-                name = "http"
-              }
-            }
-          }
-        }
-      }
-    }
-    tls {
-      secret_name = "${local.ollama_name}-tls"
-      hosts       = ["${local.ollama_name}.${local.new_domain}"]
-    }
-  }
+module "ollama_ingress" {
+  source = "./modules/ingress"
+
+  name            = "${local.ollama_name}-ingress"
+  namespace       = kubernetes_namespace.ollama_namespace.metadata.0.name
+  host            = "${local.ollama_name}.${local.new_domain}"
+  service_name    = kubernetes_service.ollama_service.metadata[0].name
+  service_port    = kubernetes_service.ollama_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "${local.ollama_name}-tls"
 }

@@ -1,3 +1,7 @@
+locals {
+  pgadmin_name = "pgadmin"
+}
+
 resource "kubernetes_namespace" "pgadmin" {
   metadata {
     name = "pgadmin"
@@ -188,39 +192,14 @@ resource "kubernetes_service" "pgadmin_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "pgadmin_ingress" {
-  metadata {
-    name      = "pgadmin-ingress"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
-    annotations = {
-      "kubernetes.io/ingress.class"                      = "traefik"
-      "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
+module "pgadmin_ingress" {
+  source = "./modules/ingress"
 
-  spec {
-    rule {
-      host = "pgadmin.${local.new_domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.pgadmin_service.metadata[0].name
-              port {
-                number = 80
-              }
-            }
-          }
-        }
-      }
-    }
-
-    tls {
-      secret_name = "pgadmin-tls"
-      hosts       = ["pgadmin.${local.new_domain}"]
-    }
-  }
+  name            = "${local.pgadmin_name}-ingress"
+  namespace       = kubernetes_namespace.pgadmin.metadata.0.name
+  host            = "${local.pgadmin_name}.${local.new_domain}"
+  service_name    = kubernetes_service.pgadmin_service.metadata[0].name
+  service_port    = kubernetes_service.pgadmin_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "${local.pgadmin_name}-tls"
 }
