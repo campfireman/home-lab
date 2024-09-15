@@ -52,10 +52,6 @@ resource "kubernetes_deployment" "registry_deployment" {
             container_port = local.registry_port
           }
 
-          security_context {
-            privileged = true
-          }
-
           liveness_probe {
             http_get {
               path   = "/"

@@ -36,10 +36,6 @@ resource "kubernetes_deployment" "rss_unlocker_deployment" {
             container_port = local.rss_unlocker_port
           }
 
-          security_context {
-            privileged = true
-          }
-
           liveness_probe {
             http_get {
               path   = "/health"
