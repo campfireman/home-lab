@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "ollama_deployment" {
           lifecycle {
             post_start {
               exec {
-                command = ["/bin/sh", "-c", "/bin/ollama pull gemma2"]
+                command = ["/bin/sh", "-c", "echo gemma2 llama3.1 | xargs -n1 /bin/ollama pull"]
               }
             }
           }
@@ -128,6 +128,6 @@ module "ollama_ingress" {
   host            = "${local.ollama_name}.${local.new_domain}"
   service_name    = kubernetes_service.ollama_service.metadata[0].name
   service_port    = kubernetes_service.ollama_service.spec[0].port[0].port
-  tls_config      = "INTERNAL_TLS"
+  tls_config      = "NO_TLS"
   tls_secret_name = "${local.ollama_name}-tls"
 }
