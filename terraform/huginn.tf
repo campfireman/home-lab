@@ -33,6 +33,7 @@ resource "kubernetes_config_map" "huginn_config" {
     DATABASE_HOST    = "postgres-service.postgres.svc.cluster.local"
     DATABASE_PORT    = "5432"
     DATABASE_NAME    = "huginn"
+    TIMEZONE         = "Europe/Berlin"
   }
 }
 
