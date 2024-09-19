@@ -7,6 +7,7 @@ flowchart TD
     tandoor --> postgres
     pgadmin --> postgres
     membrane --> ollama
+    open-webui --> ollama
     homeassistant --> influxDB
     homeassistant --> mosquitto
     jellyfin
