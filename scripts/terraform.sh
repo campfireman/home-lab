@@ -18,8 +18,12 @@ function apply() {
 }
 
 function print_usage() {
-  echo "Usage: $0 <init|plan|apply> <module_path_from_project_root> [var1=value1 var2=value2 ...]"
+  echo "Usage: $0 <init|plan|apply|import> <module_path_from_project_root> [var1=value1 var2=value2 ...] [positional_arg1 positional_args2 ...]"
   exit 1
+}
+
+function import () {
+  tfenv exec import ${TF_VARS_ARG} ${*}
 }
 
 CMD=${1}
@@ -27,7 +31,7 @@ PROJECT_DIR=$(cd "$(dirname "$0")"/.. && pwd -P)
 MODULE_PATH=${PROJECT_DIR}/${2}
 shift
 shift
-TF_VARS=${*}
+TF_ARGS=${*}
 TF_VARS_ARG=""
 
 if [[ -z "${CMD}" || -z "${MODULE_PATH}" ]]; then
@@ -40,8 +44,11 @@ if [[ ! -d "${MODULE_PATH}" ]]; then
   exit 1
 fi
 
-for VAR in ${TF_VARS}; do
-  TF_VARS_ARG="${TF_VARS_ARG} -var ${VAR}"
+for VAR in ${TF_ARGS}; do
+  if [[ "${VAR}" == *"="* ]]; then
+    TF_VARS_ARG="${TF_VARS_ARG} -var ${VAR}"
+    shift
+  fi
 done
 
 pushd "${MODULE_PATH}" >/dev/null || exit
@@ -55,6 +62,9 @@ plan)
   ;;
 apply)
   apply
+  ;;
+import)
+  import ${*}
   ;;
 *)
   print_usage
