@@ -2,6 +2,5 @@
 - include_tasks: tls.yml
 - include_tasks: kubernetes-dashboard.yml
 - include_tasks: postgres.yml
-- include_tasks: grafana.yml
 - include_tasks: traefik-dashboard.yml
 - include_tasks: longhorn-ui.yml
