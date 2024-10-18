@@ -1,0 +1,36 @@
+---
+- name: Create Home Assistant folder.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/home-assistant"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy Home Assistant docker-compose template to Pi.
+  ansible.builtin.template:
+    src: templates/home-assistant-docker-compose.yml.j2
+    dest: "{{ config_dir }}/home-assistant/docker-compose.yml"
+    mode: "0640"
+  become: false
+
+- name: Deploy and run Home Assistant
+  community.docker.docker_compose_v2:
+    project_src: "{{ config_dir }}/home-assistant"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always
+    remove_orphans: true
+    recreate: always
+
+- name: Check if Home Assistant is running
+  community.docker.docker_container_info:
+    name: homeassistant
+  register: container_info
+
+- name: Verify container status
+  ansible.builtin.assert:
+    that:
+      - container_info.container.State.Status == "running"
+    fail_msg: "Home Assistant container is not running"
+    success_msg: "Home Assistant container is running"

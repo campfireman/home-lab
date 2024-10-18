@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+---
+
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "homeassistant/home-assistant:{{ ha_version }}"
+    volumes:
+      - {{ config_dir }}/home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    ports:
+      - {{ ha_port }}:8123/tcp
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    networks:
+      - {{ docker_network_name }}
+
+networks:
+    {{ docker_network_name }}:
+       external: true

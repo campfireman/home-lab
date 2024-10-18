@@ -1,5 +1,0 @@
----
-- name: Install Python kubernetes client
-  apt:
-    name: python3-kubernetes
-    state: present

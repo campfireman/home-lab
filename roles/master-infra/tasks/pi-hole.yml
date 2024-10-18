@@ -1,0 +1,36 @@
+---
+- name: Create Pi-hole folder on Pi.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/pi-hole"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy Pi-hole docker-compose template to Pi.
+  ansible.builtin.template:
+    src: templates/pi-hole-docker-compose.yml.j2
+    dest: "{{ config_dir }}/pi-hole/docker-compose.yml"
+    mode: "0640"
+  become: false
+
+- name: Deploy and run Pi-hole
+  community.docker.docker_compose_v2:
+    project_src: "{{ config_dir }}/pi-hole"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always
+    remove_orphans: true
+    recreate: always
+
+- name: Check if Pi-hole is running
+  community.docker.docker_container_info:
+    name: pihole
+  register: container_info
+
+- name: Verify container status
+  ansible.builtin.assert:
+    that:
+      - container_info.container.State.Status == "running"
+    fail_msg: "Pi-hole container is not running"
+    success_msg: "Pi-hole container is running"
