@@ -1,0 +1,22 @@
+services:
+  camera:
+    image: registry.local/campfireman/picam-stream:1.0.2
+    restart: unless-stopped
+    volumes:
+      - /run/udev:/run/udev:ro
+    ports:
+      - "7123:7123"
+    privileged: true
+
+  nginx:
+    image: nginx:1.27.2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - camera
+
+volumes:
+  nginx-config:

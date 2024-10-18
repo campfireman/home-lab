@@ -1,0 +1,31 @@
+---
+- name: Create picam folder on Pi.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/picam"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy picam docker-compose template to Pi.
+  ansible.builtin.template:
+    src: templates/picam-docker-compose.yml.j2
+    dest: "{{ config_dir }}/picam/docker-compose.yml"
+    mode: "0640"
+  become: false
+
+- name: Copy nginx template to Pi.
+  ansible.builtin.template:
+    src: templates/nginx.conf.j2
+    dest: "{{ config_dir }}/picam/nginx.conf"
+    mode: "0640"
+  become: false
+
+- name: Deploy and run picam
+  community.docker.docker_compose_v2:
+    project_src: "{{ config_dir }}/picam"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always
+    remove_orphans: true
+    recreate: always
