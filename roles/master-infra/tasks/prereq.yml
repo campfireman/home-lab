@@ -1,15 +1,5 @@
 ---
-- name: Install Docker
-  apt:
-    name: python3-docker
-    state: present
-
 - name: Install Python kubernetes client
   apt:
     name: python3-kubernetes
-    state: present
-
-- name: Install Python docker client
-  apt:
-    name: python3-docker
     state: present
