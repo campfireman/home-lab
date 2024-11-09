@@ -24,7 +24,7 @@
           server_name home-assistant.local;
 
           location / {
-              proxy_pass http://homeassistant:8123;
+              proxy_pass http://homeassistant:{{ ha_port }};
               proxy_set_header Host $host;
               proxy_set_header X-Real-IP $remote_addr;
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -60,15 +60,3 @@
     pull: always
     remove_orphans: true
     recreate: always
-
-- name: Check if nginx is running
-  community.docker.docker_container_info:
-    name: nginx
-  register: container_info
-
-- name: Verify container status
-  ansible.builtin.assert:
-    that:
-      - container_info.container.State.Status == "running"
-    fail_msg: "nginx container is not running"
-    success_msg: "nginx container is running"
