@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "ollama_deployment" {
           lifecycle {
             post_start {
               exec {
-                command = ["/bin/sh", "-c", "echo gemma2 llama3.1 | xargs -n1 /bin/ollama pull"]
+                command = ["/bin/sh", "-c", "echo gemma2 deepseek-r1:7b | xargs -n1 /bin/ollama pull"]
               }
             }
           }
