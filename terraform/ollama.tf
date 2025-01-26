@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "ollama_deployment" {
       spec {
         container {
           name              = "${local.ollama_name}-container"
-          image             = "ollama/ollama:0.3.10"
+          image             = "ollama/ollama:0.5.7"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.ollama_port
