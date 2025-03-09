@@ -138,37 +138,26 @@ resource "kubernetes_service" "jellyfin_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "jellyfin_ingress" {
-  metadata {
-    name      = "${local.jellyfin_name}-ingress"
-    namespace = kubernetes_namespace.jellyfin_namespace.metadata.0.name
-    annotations = {
-      "kubernetes.io/ingress.class" = "traefik"
-      #   "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      #   "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
-  spec {
-    rule {
-      host = "${local.jellyfin_name}.${local.domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.jellyfin_service.metadata.0.name
-              port {
-                name = "http"
-              }
-            }
-          }
-        }
-      }
-    }
-    tls {
-      secret_name = "${local.jellyfin_name}-tls"
-      hosts       = ["${local.jellyfin_name}.${local.domain}"]
-    }
-  }
+module "jellyfin_ingress" {
+  source = "./modules/ingress"
+
+  name            = "${local.jellyfin_name}-ingress"
+  namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
+  host            = "jellyfin.${local.new_new_domain}"
+  service_name    = kubernetes_service.jellyfin_service.metadata[0].name
+  service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "jellyfin-tls"
+}
+
+module "jellyfin_ingress_unsafe" {
+  source = "./modules/ingress"
+
+  name            = "${local.jellyfin_name}-ingress-unsafe"
+  namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
+  host            = "jellyfin-unsafe.${local.new_new_domain}"
+  service_name    = kubernetes_service.jellyfin_service.metadata[0].name
+  service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
+  tls_config      = "NO_TLS"
+  tls_secret_name = "jellyfin-tls-unsafe"
 }
