@@ -125,7 +125,7 @@ module "ollama_ingress" {
 
   name            = "${local.ollama_name}-ingress"
   namespace       = kubernetes_namespace.ollama_namespace.metadata.0.name
-  host            = "${local.ollama_name}.${local.new_domain}"
+  host            = "${local.ollama_name}.${local.domain}"
   service_name    = kubernetes_service.ollama_service.metadata[0].name
   service_port    = kubernetes_service.ollama_service.spec[0].port[0].port
   tls_config      = "NO_TLS"

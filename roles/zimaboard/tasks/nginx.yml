@@ -21,7 +21,7 @@
     content: |
       server {
           listen 80;
-          server_name home-assistant.local;
+          server_name home-assistant.home.arpa;
 
           location / {
               proxy_pass http://homeassistant:{{ ha_port }};
@@ -37,7 +37,7 @@
 
       server {
           listen 80;
-          server_name pi-hole.local;
+          server_name pi-hole.home.arpa;
 
           location / {
               rewrite ^/$ /admin redirect;

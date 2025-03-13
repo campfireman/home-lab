@@ -178,7 +178,7 @@ resource "kubernetes_ingress_v1" "huginn_ingress" {
   }
   spec {
     rule {
-      host = "${local.huginn_name}.${local.new_domain}"
+      host = "${local.huginn_name}.${local.domain}"
       http {
         path {
           path      = "/"
@@ -196,7 +196,7 @@ resource "kubernetes_ingress_v1" "huginn_ingress" {
     }
     tls {
       secret_name = "${local.huginn_name}-tls"
-      hosts       = ["${local.huginn_name}.${local.new_domain}"]
+      hosts       = ["${local.huginn_name}.${local.domain}"]
     }
   }
 }

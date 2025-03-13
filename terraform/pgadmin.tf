@@ -197,7 +197,7 @@ module "pgadmin_ingress" {
 
   name            = "${local.pgadmin_name}-ingress"
   namespace       = kubernetes_namespace.pgadmin.metadata.0.name
-  host            = "${local.pgadmin_name}.${local.new_domain}"
+  host            = "${local.pgadmin_name}.${local.domain}"
   service_name    = kubernetes_service.pgadmin_service.metadata[0].name
   service_port    = kubernetes_service.pgadmin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"

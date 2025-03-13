@@ -116,7 +116,7 @@ module "open_webui_ingress" {
 
   name            = "${local.open_webui_name}-ingress"
   namespace       = kubernetes_namespace.open_webui_namespace.metadata.0.name
-  host            = "${local.open_webui_name}.${local.new_domain}"
+  host            = "${local.open_webui_name}.${local.domain}"
   service_name    = kubernetes_service.open_webui_service.metadata[0].name
   service_port    = kubernetes_service.open_webui_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"

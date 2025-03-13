@@ -136,7 +136,7 @@ module "miniflux_ingress" {
 
   name            = "miniflux-ingress"
   namespace       = kubernetes_namespace.miniflux.metadata[0].name
-  host            = "miniflux.${local.new_new_domain}"
+  host            = "miniflux.${local.domain}"
   service_name    = kubernetes_service.miniflux_service.metadata[0].name
   service_port    = kubernetes_service.miniflux_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"

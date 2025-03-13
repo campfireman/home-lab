@@ -91,7 +91,7 @@ resource "kubernetes_ingress_v1" "membrane_ingress" {
   }
   spec {
     rule {
-      host = "${local.membrane_name}.${local.new_domain}"
+      host = "${local.membrane_name}.${local.domain}"
       http {
         path {
           path      = "/"
@@ -109,7 +109,7 @@ resource "kubernetes_ingress_v1" "membrane_ingress" {
     }
     tls {
       secret_name = "${local.membrane_name}-tls"
-      hosts       = ["${local.membrane_name}.${local.new_domain}"]
+      hosts       = ["${local.membrane_name}.${local.domain}"]
     }
   }
 }

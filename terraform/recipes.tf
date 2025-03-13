@@ -387,7 +387,7 @@ resource "kubernetes_ingress_v1" "recipes-ingress" {
 
   spec {
     rule {
-      host = "recipes.${local.new_domain}"
+      host = "recipes.${local.domain}"
       http {
         path {
           path      = "/"
@@ -429,7 +429,7 @@ resource "kubernetes_ingress_v1" "recipes-ingress" {
     }
 
     tls {
-      hosts       = ["recipes.${local.new_domain}"]
+      hosts       = ["recipes.${local.domain}"]
       secret_name = "recipes-tls"
     }
   }

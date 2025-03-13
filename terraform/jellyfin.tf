@@ -143,7 +143,7 @@ module "jellyfin_ingress" {
 
   name            = "${local.jellyfin_name}-ingress"
   namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
-  host            = "jellyfin.${local.new_new_domain}"
+  host            = "jellyfin.${local.domain}"
   service_name    = kubernetes_service.jellyfin_service.metadata[0].name
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
@@ -155,7 +155,7 @@ module "jellyfin_ingress_unsafe" {
 
   name            = "${local.jellyfin_name}-ingress-unsafe"
   namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
-  host            = "jellyfin-unsafe.${local.new_new_domain}"
+  host            = "jellyfin-unsafe.${local.domain}"
   service_name    = kubernetes_service.jellyfin_service.metadata[0].name
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
   tls_config      = "NO_TLS"

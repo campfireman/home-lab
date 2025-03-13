@@ -117,7 +117,7 @@ resource "kubernetes_ingress_v1" "registry_ingress" {
   }
   spec {
     rule {
-      host = "${local.registry_name}.${local.new_domain}"
+      host = "${local.registry_name}.${local.domain}"
       http {
         path {
           path      = "/"
@@ -135,7 +135,7 @@ resource "kubernetes_ingress_v1" "registry_ingress" {
     }
     tls {
       secret_name = "${local.registry_name}-tls"
-      hosts       = ["${local.registry_name}.${local.new_domain}"]
+      hosts       = ["${local.registry_name}.${local.domain}"]
     }
   }
 }

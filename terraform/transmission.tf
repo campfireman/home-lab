@@ -168,7 +168,7 @@ resource "kubernetes_ingress_v1" "transmission_ingress" {
   }
   spec {
     rule {
-      host = "${local.transmission_name}.${local.new_domain}"
+      host = "${local.transmission_name}.${local.domain}"
       http {
         path {
           path      = "/"
@@ -186,7 +186,7 @@ resource "kubernetes_ingress_v1" "transmission_ingress" {
     }
     tls {
       secret_name = "${local.transmission_name}-tls"
-      hosts       = ["${local.transmission_name}.${local.new_domain}"]
+      hosts       = ["${local.transmission_name}.${local.domain}"]
     }
   }
 }

@@ -30,7 +30,7 @@ resource "kubernetes_deployment" "rss_unlocker_deployment" {
       spec {
         container {
           name              = "${local.rss_unlocker_name}-container"
-          image             = "registry.local/campfireman/rss-unlocker:1.0.0"
+          image             = "registry.home.arpa/campfireman/rss-unlocker:1.0.0"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.rss_unlocker_port
@@ -83,7 +83,7 @@ module "rss_unlocker_ingress" {
 
   name            = "${local.rss_unlocker_name}-ingress"
   namespace       = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
-  host            = "${local.rss_unlocker_name}.${local.new_domain}"
+  host            = "${local.rss_unlocker_name}.${local.domain}"
   service_name    = kubernetes_service.rss_unlocker_service.metadata[0].name
   service_port    = kubernetes_service.rss_unlocker_service.spec[0].port[0].port
   tls_config      = "NO_TLS"

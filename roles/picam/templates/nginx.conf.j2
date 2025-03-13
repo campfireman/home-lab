@@ -5,7 +5,7 @@ events {
 http {
     server {
         listen 80;
-        server_name picam.local;
+        server_name picam.home.arpa;
 
         location / {
             proxy_pass http://camera:7123;

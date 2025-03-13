@@ -127,7 +127,7 @@ module "grafana_ingress" {
 
   name            = "${local.grafana_name}-ingress"
   namespace       = kubernetes_namespace.grafana.metadata.0.name
-  host            = "${local.grafana_name}.${local.new_domain}"
+  host            = "${local.grafana_name}.${local.domain}"
   service_name    = kubernetes_service.grafana-service.metadata[0].name
   service_port    = kubernetes_service.grafana-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
