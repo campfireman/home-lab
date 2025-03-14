@@ -166,37 +166,14 @@ resource "kubernetes_service" "huginn_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "huginn_ingress" {
-  metadata {
-    name      = "${local.huginn_name}-ingress"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
-    annotations = {
-      "kubernetes.io/ingress.class"                      = "traefik"
-      "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
-  spec {
-    rule {
-      host = "${local.huginn_name}.${local.domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.huginn_service.metadata.0.name
-              port {
-                name = "http"
-              }
-            }
-          }
-        }
-      }
-    }
-    tls {
-      secret_name = "${local.huginn_name}-tls"
-      hosts       = ["${local.huginn_name}.${local.domain}"]
-    }
-  }
+module "huginn_ingress" {
+  source = "./modules/ingress"
+
+  name            = "${local.huginn_name}-ingress"
+  namespace       = kubernetes_namespace.huginn_namespace.metadata.0.name
+  host            = "${local.huginn_name}.${local.domain}"
+  service_name    = kubernetes_service.huginn_service.metadata[0].name
+  service_port    = kubernetes_service.huginn_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "${local.huginn_name}-tls"
 }
