@@ -105,37 +105,14 @@ resource "kubernetes_service" "registry_service" {
   }
 }
 
-resource "kubernetes_ingress_v1" "registry_ingress" {
-  metadata {
-    name      = "${local.registry_name}-ingress"
-    namespace = kubernetes_namespace.registry_namespace.metadata.0.name
-    annotations = {
-      "kubernetes.io/ingress.class"                      = "traefik"
-      "cert-manager.io/cluster-issuer"                   = "internal-issuer"
-      "traefik.ingress.kubernetes.io/router.middlewares" = "kube-system-redirect-https@kubernetescrd"
-    }
-  }
-  spec {
-    rule {
-      host = "${local.registry_name}.${local.domain}"
-      http {
-        path {
-          path      = "/"
-          path_type = "Prefix"
-          backend {
-            service {
-              name = kubernetes_service.registry_service.metadata.0.name
-              port {
-                name = "http"
-              }
-            }
-          }
-        }
-      }
-    }
-    tls {
-      secret_name = "${local.registry_name}-tls"
-      hosts       = ["${local.registry_name}.${local.domain}"]
-    }
-  }
+module "registry_ingress" {
+  source = "./modules/ingress"
+
+  name            = "${local.registry_name}-ingress"
+  namespace       = kubernetes_namespace.registry_namespace.metadata.0.name
+  host            = "${local.registry_name}.${local.domain}"
+  service_name    = kubernetes_service.registry_service.metadata[0].name
+  service_port    = kubernetes_service.registry_service.spec[0].port[0].port
+  tls_config      = "INTERNAL_TLS"
+  tls_secret_name = "${local.registry_name}-tls"
 }
