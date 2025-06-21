@@ -70,7 +70,7 @@ resource "kubernetes_deployment" "transmission_deployment" {
       spec {
         container {
           name              = "${local.transmission_name}-container"
-          image             = "haugene/transmission-openvpn:5.3.1"
+          image             = "haugene/transmission-openvpn:5.3.2"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.transmission_port
