@@ -39,6 +39,9 @@ deploy-zimaboard: install-requirements
 deploy-picam: install-requirements
 	$(call playbook_with_tag,picam)
 
+deploy-tailscale: install-requirements
+	$(call playbook_with_tag,tailscale)
+
 terraform-init:
 	./scripts/terraform.sh init terraform
 

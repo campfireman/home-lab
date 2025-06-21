@@ -51,10 +51,15 @@
   tags:
     - picam
 
-# - name: Servers
-#   hosts: all
-#   roles:
-#     - role: artis3n.tailscale
-#       vars:
-#         verbose: true
-#         tailscale_authkey: "{{ lookup('env', 'TAILSCALE_KEY') }}"
+- name: Servers
+  hosts:
+    - zimaboard
+    - master
+  roles:
+    - role: artis3n.tailscale.machine
+      vars:
+        tailscale_authkey: "{{ tailscale_auth_key }}"
+        verbose: true
+        tailscale_args: --advertise-routes=192.168.1.0/24
+  tags:
+    - tailscale
