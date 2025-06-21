@@ -50,3 +50,11 @@
     - role: picam
   tags:
     - picam
+
+# - name: Servers
+#   hosts: all
+#   roles:
+#     - role: artis3n.tailscale
+#       vars:
+#         verbose: true
+#         tailscale_authkey: "{{ lookup('env', 'TAILSCALE_KEY') }}"
