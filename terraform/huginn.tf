@@ -1,6 +1,7 @@
 locals {
-  huginn_name = "huginn"
-  huginn_port = 3000
+  huginn_name   = "huginn"
+  huginn_port   = 3000
+  huginn_digest = "1e0c359a46b1e84eb8c658404212eaf693b30e61"
 }
 
 resource "kubernetes_namespace" "huginn_namespace" {
@@ -58,7 +59,7 @@ resource "kubernetes_deployment" "huginn_deployment" {
       spec {
         container {
           name              = "${local.huginn_name}-container"
-          image             = "ghcr.io/huginn/huginn-single-process:1066a61f06f640b12133767f2fb173201cc2ea24"
+          image             = "ghcr.io/huginn/huginn-single-process:${local.huginn_digest}"
           image_pull_policy = "IfNotPresent"
 
           port {
@@ -124,7 +125,7 @@ resource "kubernetes_deployment" "huginn_worker_deployment" {
       spec {
         container {
           name              = "${local.huginn_name}-worker-container"
-          image             = "ghcr.io/huginn/huginn-single-process:1066a61f06f640b12133767f2fb173201cc2ea24"
+          image             = "ghcr.io/huginn/huginn-single-process:${local.huginn_digest}"
           image_pull_policy = "IfNotPresent"
 
           command = ["/scripts/init", "bin/threaded.rb"]
