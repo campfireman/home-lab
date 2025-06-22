@@ -16,6 +16,10 @@ terraform {
       source  = "carlpett/sops"
       version = "1.2.0"
     }
+    pihole = {
+      source  = "ryanwholey/pihole"
+      version = "2.0.0-beta.1"
+    }
   }
 }
 
@@ -24,7 +28,7 @@ provider "google" {
 }
 
 provider "kubernetes" {
-  host = "https://192.168.1.102:6443"
+  host = "https://${local.master_node_ip}:6443"
 
   token    = var.deployer_service_account_token
   insecure = true
@@ -32,7 +36,7 @@ provider "kubernetes" {
 
 provider "helm" {
   kubernetes {
-    host = "https://192.168.1.102:6443"
+    host = "https://${local.master_node_ip}:6443"
 
     token    = var.deployer_service_account_token
     insecure = true
@@ -40,3 +44,11 @@ provider "helm" {
 }
 
 provider "sops" {}
+
+provider "pihole" {
+  url = "http://pi-hole.${local.domain}"
+
+  # Pi-hole sets the API token to the admin password hashed twiced via SHA-256
+  # api_token = sha256(sha256(data.sops_file.secrets.data["pihole_admin_password"]))
+  password = data.sops_file.secrets.data["pihole_admin_password"]
+}

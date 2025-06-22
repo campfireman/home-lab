@@ -88,4 +88,5 @@ module "rss_unlocker_ingress" {
   service_port    = kubernetes_service.rss_unlocker_service.spec[0].port[0].port
   tls_config      = "NO_TLS"
   tls_secret_name = "${local.rss_unlocker_name}-tls"
+  dns_target_ip   = local.master_node_ip
 }

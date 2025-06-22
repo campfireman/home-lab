@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    pihole = {
+      source  = "ryanwholey/pihole"
+      version = "2.0.0-beta.1"
+    }
+  }
+}
+
 locals {
   base_annotations = {
     "kubernetes.io/ingress.class" = "traefik"
@@ -56,4 +65,9 @@ resource "kubernetes_ingress_v1" "ingress" {
       }
     }
   }
+}
+
+resource "pihole_dns_record" "record" {
+  domain = var.host
+  ip     = var.dns_target_ip
 }

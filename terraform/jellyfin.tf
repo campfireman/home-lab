@@ -148,6 +148,7 @@ module "jellyfin_ingress" {
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "jellyfin-tls"
+  dns_target_ip   = local.master_node_ip
 }
 
 module "jellyfin_ingress_unsafe" {
@@ -160,4 +161,5 @@ module "jellyfin_ingress_unsafe" {
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
   tls_config      = "NO_TLS"
   tls_secret_name = "jellyfin-tls-unsafe"
+  dns_target_ip   = local.master_node_ip
 }

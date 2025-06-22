@@ -43,3 +43,8 @@ variable "additional_annotations" {
   description = "Additional annotations to add to the Ingress"
   default     = {}
 }
+
+variable "dns_target_ip" {
+  type        = string
+  description = "The IP address the DNS record should point to."
+}

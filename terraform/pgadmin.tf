@@ -202,4 +202,5 @@ module "pgadmin_ingress" {
   service_port    = kubernetes_service.pgadmin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.pgadmin_name}-tls"
+  dns_target_ip   = local.master_node_ip
 }

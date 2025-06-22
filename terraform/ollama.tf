@@ -130,4 +130,5 @@ module "ollama_ingress" {
   service_port    = kubernetes_service.ollama_service.spec[0].port[0].port
   tls_config      = "NO_TLS"
   tls_secret_name = "${local.ollama_name}-tls"
+  dns_target_ip   = local.master_node_ip
 }
