@@ -134,7 +134,7 @@ resource "kubernetes_service" "mosquitto_service" {
 
 resource "kubernetes_manifest" "ingressroutetcp_mosquitto_ingress" {
   manifest = {
-    "apiVersion" = "traefik.containo.us/v1alpha1"
+    "apiVersion" = "traefik.io/v1alpha1"
     "kind"       = "IngressRouteTCP"
     "metadata" = {
       "name"      = "${local.service_name}-ingress"
