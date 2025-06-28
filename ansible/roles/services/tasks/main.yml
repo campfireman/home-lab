@@ -2,4 +2,3 @@
 - include_tasks: tls.yml
 - include_tasks: kubernetes-dashboard.yml
 - include_tasks: postgres.yml
-- include_tasks: traefik-dashboard.yml
