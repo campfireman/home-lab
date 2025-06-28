@@ -8,6 +8,8 @@ resource "kubernetes_manifest" "traefik_config" {
     }
     spec = {
       valuesContent = <<-YAML
+        deployment:
+          enabled: true
         dashboard:
           enabled: true
         additionalArguments:
@@ -24,10 +26,12 @@ resource "kubernetes_manifest" "traefik_config" {
   }
 }
 
-# kubectl patch svc traefik -n kube-system --type='merge' -p '{
+# sudo kubectl patch svc traefik -n kube-system --type='merge' -p '{
 #   "spec": {
 #     "ports": [
-#       {"name":"mqtt","port":1883,"protocol":"TCP"}
+#       {"port":1883,"name":"mqtt","protocol":"TCP"},
+#       {"port":80,"name":"web","protocol":"TCP"},
+#       {"port":443,"name":"websecure","protocol":"TCP"}
 #     ]
 #   }
 # }'
