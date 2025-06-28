@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "registry_deployment" {
       spec {
         container {
           name              = "${local.registry_name}-container"
-          image             = "registry:2.8.3"
+          image             = "registry:3.0.0"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.registry_port
