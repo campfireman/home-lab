@@ -43,13 +43,13 @@
   tags:
     - zimaboard
 
-- name: "Setup specifics for picam"
-  hosts: picam
-  become: yes
-  roles:
-    - role: picam
-  tags:
-    - picam
+# - name: "Setup specifics for picam"
+#   hosts: picam
+#   become: yes
+#   roles:
+#     - role: picam
+#   tags:
+#     - picam
 
 - name: Servers
   hosts:
