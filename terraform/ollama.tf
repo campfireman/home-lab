@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "ollama_deployment" {
       spec {
         container {
           name              = "${local.ollama_name}-container"
-          image             = "ollama/ollama:0.5.7"
+          image             = "ollama/ollama:0.9.3"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.ollama_port
@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "ollama_deployment" {
           lifecycle {
             post_start {
               exec {
-                command = ["/bin/sh", "-c", "echo gemma2 deepseek-r1:7b | xargs -n1 /bin/ollama pull"]
+                command = ["/bin/sh", "-c", "echo gemma3:4b deepseek-r1:8b | xargs -n1 /bin/ollama pull"]
               }
             }
           }

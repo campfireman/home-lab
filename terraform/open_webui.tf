@@ -46,7 +46,7 @@ resource "kubernetes_deployment" "open_webui_deployment" {
       spec {
         container {
           name              = "${local.open_webui_name}-container"
-          image             = "ghcr.io/open-webui/open-webui:0.5.7"
+          image             = "ghcr.io/open-webui/open-webui:0.6.17"
           image_pull_policy = "IfNotPresent"
 
           port {
