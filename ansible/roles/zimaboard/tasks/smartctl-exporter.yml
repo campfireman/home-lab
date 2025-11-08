@@ -1,0 +1,36 @@
+---
+- name: Create smartctl-exporter folder.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/smartctl-exporter"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy smartctl-exporter docker-compose template to Pi.
+  ansible.builtin.template:
+    src: templates/smartctl-exporter-docker-compose.yml.j2
+    dest: "{{ config_dir }}/smartctl-exporter/docker-compose.yml"
+    mode: "0640"
+  become: false
+
+- name: Deploy and run smartctl-exporter
+  community.docker.docker_compose_v2:
+    project_src: "{{ config_dir }}/smartctl-exporter"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always
+    remove_orphans: true
+    recreate: always
+
+- name: Check if smartctl-exporter is running
+  community.docker.docker_container_info:
+    name: smartctl-exporter
+  register: container_info
+
+- name: Verify container status
+  ansible.builtin.assert:
+    that:
+      - container_info.container.State.Status == "running"
+    fail_msg: "smartctl-exporter container is not running"
+    success_msg: "smartctl-exporter container is running"
