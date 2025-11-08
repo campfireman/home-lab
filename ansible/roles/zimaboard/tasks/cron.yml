@@ -1,0 +1,8 @@
+- name: Schedule weekly Btrfs scrub for /var/nfs/media
+  ansible.builtin.cron:
+    name: "Btrfs scrub /var/nfs/media"
+    user: root
+    minute: "0"
+    hour: "2"
+    weekday: "0"
+    job: "btrfs scrub start -Bd /var/nfs/media >> /var/log/btrfs-scrub-media.log 2>&1"
