@@ -25,6 +25,18 @@ resource "kubernetes_persistent_volume_claim" "grafana-pvc" {
   }
 }
 
+resource "kubernetes_secret" "grafana_secrets" {
+  metadata {
+    name      = "grafana-secrets"
+    namespace = kubernetes_namespace.grafana.metadata[0].name
+  }
+
+  data = {
+    GF_ADMIN_USER     = data.sops_file.secrets.data["grafana_admin_user"]
+    GF_ADMIN_PASSWORD = data.sops_file.secrets.data["grafana_admin_password"]
+  }
+}
+
 resource "kubernetes_deployment" "grafana" {
   metadata {
     name      = local.grafana_name
@@ -62,6 +74,25 @@ resource "kubernetes_deployment" "grafana" {
 
           port {
             container_port = local.grafana_port
+          }
+
+          env {
+            name = "GF_SECURITY_ADMIN_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.grafana_secrets.metadata[0].name
+                key  = "GF_ADMIN_USER"
+              }
+            }
+          }
+          env {
+            name = "GF_SECURITY_ADMIN_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.grafana_secrets.metadata[0].name
+                key  = "GF_ADMIN_PASSWORD"
+              }
+            }
           }
 
           readiness_probe {

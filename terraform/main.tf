@@ -59,5 +59,5 @@ provider "pihole" {
 
 provider "grafana" {
   url  = "https://${local.grafana_name}.${local.domain}"
-  auth = "admin:${data.sops_file.secrets.data["grafana_admin_password"]}"
+  auth = "${data.sops_file.secrets.data["grafana_admin_user"]}:${data.sops_file.secrets.data["grafana_admin_password"]}"
 }
