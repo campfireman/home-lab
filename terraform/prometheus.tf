@@ -27,6 +27,9 @@ scrape_configs:
     - job_name: 'smartctl'
       static_configs:
         - targets: ['192.168.1.67:9633', '192.168.1.102:9633']
+    - job_name: 'node-exporter'
+      static_configs:
+        - targets: ['192.168.1.67:9100', '192.168.1.102:9100']
 EOF
   }
 }

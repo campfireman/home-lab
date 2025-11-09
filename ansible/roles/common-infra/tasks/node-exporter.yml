@@ -1,0 +1,36 @@
+---
+- name: Create node-exporter folder.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/node-exporter"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy node-exporter docker-compose template.
+  ansible.builtin.template:
+    src: templates/node-exporter-docker-compose.yml.j2
+    dest: "{{ config_dir }}/node-exporter/docker-compose.yml"
+    mode: "0640"
+  become: false
+
+- name: Deploy and run node-exporter
+  community.docker.docker_compose_v2:
+    project_src: "{{ config_dir }}/node-exporter"
+    files:
+      - docker-compose.yml
+    state: present
+    pull: always
+    remove_orphans: true
+    recreate: always
+
+- name: Check if node-exporter is running
+  community.docker.docker_container_info:
+    name: node-exporter
+  register: container_info
+
+- name: Verify container status
+  ansible.builtin.assert:
+    that:
+      - container_info.container.State.Status == "running"
+    fail_msg: "node-exporter container is not running"
+    success_msg: "node-exporter container is running"
