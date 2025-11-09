@@ -17,6 +17,10 @@ function apply() {
   tfenv exec apply -input=false -auto-approve ${TF_VARS_ARG}
 }
 
+function console() {
+  tfenv exec console ${TF_VARS_ARG}
+}
+
 function print_usage() {
   echo "Usage: $0 <init|plan|apply|import> <module_path_from_project_root> [var1=value1 var2=value2 ...] [positional_arg1 positional_args2 ...]"
   exit 1
@@ -62,6 +66,9 @@ plan)
   ;;
 apply)
   apply
+  ;;
+console)
+  console
   ;;
 import)
   import ${*}

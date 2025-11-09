@@ -54,6 +54,9 @@ terraform-plan: terraform-init
 terraform-apply: terraform-init
 	./scripts/terraform.sh apply terraform deployer_service_account_token="$$(cat /tmp/token)"
 
+terraform-console: terraform-init
+	./scripts/terraform.sh console terraform deployer_service_account_token="$$(cat /tmp/token)"
+
 cluster-backup:
 	ssh -t ture@192.168.1.67 "sudo velero backup create ${BACKUP_NAME} --kubeconfig=/home/home-lab/.kube/config --wait && \
 	sudo velero backup describe ${BACKUP_NAME} --kubeconfig=/home/home-lab/.kube/config"
