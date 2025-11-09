@@ -42,6 +42,9 @@ deploy-picam: install-requirements
 deploy-tailscale: install-requirements
 	$(call playbook_with_tag,tailscale)
 
+deploy-common-infra: install-requirements
+	$(call playbook_with_tag,common-infra)
+
 terraform-init:
 	./scripts/terraform.sh init terraform
 

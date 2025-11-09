@@ -6,4 +6,3 @@
 - include_tasks: home-assistant.yml
 - include_tasks: nginx.yml
 - include_tasks: cron.yml
-- include_tasks: smartctl-exporter.yml

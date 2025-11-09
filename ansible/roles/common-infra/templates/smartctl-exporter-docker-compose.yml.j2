@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+---
+
+services:
+  smartctl-exporter:
+    image: "prometheuscommunity/smartctl-exporter:{{ smartctl_exporter_version }}"
+    container_name: smartctl-exporter
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "{{ smartctl_exporter_port }}:9633"

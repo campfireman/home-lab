@@ -51,7 +51,7 @@
 #   tags:
 #     - picam
 
-- name: Servers
+- name: Tailscale
   hosts:
     - zimaboard
     - master
@@ -63,3 +63,11 @@
         tailscale_args: --advertise-routes=192.168.1.0/24
   tags:
     - tailscale
+
+- name: Common Infrastructure
+  hosts: all
+  become: yes
+  roles:
+    - role: common-infra
+  tags:
+    - common-infra

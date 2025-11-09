@@ -6,7 +6,7 @@
     mode: 0755
   become: false
 
-- name: Copy smartctl-exporter docker-compose template to Pi.
+- name: Copy smartctl-exporter docker-compose template.
   ansible.builtin.template:
     src: templates/smartctl-exporter-docker-compose.yml.j2
     dest: "{{ config_dir }}/smartctl-exporter/docker-compose.yml"

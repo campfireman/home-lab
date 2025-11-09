@@ -24,9 +24,9 @@ scrape_configs:
     - job_name: 'prometheus'
       static_configs:
         - targets: ['localhost:9090']
-    - job_name: 'zimaboard-smartctl'
+    - job_name: 'smartctl'
       static_configs:
-        - targets: ['192.168.1.67:9633']
+        - targets: ['192.168.1.67:9633', '192.168.1.102:9633']
 EOF
   }
 }
