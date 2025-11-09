@@ -20,6 +20,10 @@ terraform {
       source  = "ryanwholey/pihole"
       version = "2.0.0-beta.1"
     }
+    grafana = {
+      source  = "grafana/grafana"
+      version = "4.13.0"
+    }
   }
 }
 
@@ -51,4 +55,9 @@ provider "pihole" {
   # Pi-hole sets the API token to the admin password hashed twiced via SHA-256
   # api_token = sha256(sha256(data.sops_file.secrets.data["pihole_admin_password"]))
   password = data.sops_file.secrets.data["pihole_admin_password"]
+}
+
+provider "grafana" {
+  url  = "https://${local.grafana_name}.${local.domain}"
+  auth = "admin:${data.sops_file.secrets.data["grafana_admin_password"]}"
 }
