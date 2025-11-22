@@ -1,0 +1,29 @@
+---
+- name: Install Rclone
+  apt:
+    name: rclone
+    state: present
+    update_cache: yes
+
+- name: Ensure Rclone config directory exists for root
+  file:
+    path: /root/.config/rclone
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+- name: Deploy Rclone configuration
+  template:
+    src: templates/rclone.conf.j2
+    dest: /root/.config/rclone/rclone.conf
+    mode: '0600'
+    owner: root
+    group: root
+  
+- name: Create Cron Job for Sync
+  cron:
+    name: "Sync NFS to Nextcloud"
+    minute: "0"
+    job: "/usr/bin/rclone sync {{ local_nfs_path }} {{ remote_target }} --quiet"
+    user: root

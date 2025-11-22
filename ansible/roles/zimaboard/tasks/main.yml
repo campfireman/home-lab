@@ -6,3 +6,10 @@
 - include_tasks: home-assistant.yml
 - include_tasks: nginx.yml
 - include_tasks: cron.yml
+- include_tasks:
+    file: rclone.yml
+    apply:
+      tags:
+        - rclone
+  tags:
+    - rclone
