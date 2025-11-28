@@ -8,6 +8,8 @@ docker_network_name: "main_network"
 ha_version: "2025.11.1"
 ha_port: 8123
 
+music_assistant_version: "2.6.3"
+
 pihole_version: "2025.11.0"
 pihole_port: 8080
 pihole_hostname: "zimaboard"

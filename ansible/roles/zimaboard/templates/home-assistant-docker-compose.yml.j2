@@ -9,12 +9,26 @@ services:
       - {{ config_dir }}/home-assistant/config:/config
       - /etc/localtime:/etc/localtime:ro
     restart: unless-stopped
+    network_mode: host
     ports:
       - {{ ha_port }}:8123/tcp
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
-    networks:
-      - {{ docker_network_name }}
+
+  music-assistant:
+    image: "ghcr.io/music-assistant/server:{{ music_assistant_version }}"
+    container_name: music-assistant
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - {{ config_dir }}/music-assistant/data:/data/
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
+    security_opt:
+      - apparmor:unconfined
+    environment:
+      - LOG_LEVEL=info
 
 networks:
     {{ docker_network_name }}:
