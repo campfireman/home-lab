@@ -50,7 +50,7 @@ provider "helm" {
 provider "sops" {}
 
 provider "pihole" {
-  url = "http://pi-hole.${local.domain}"
+  url = "http://192.168.1.67:8080"
 
   # Pi-hole sets the API token to the admin password hashed twiced via SHA-256
   # api_token = sha256(sha256(data.sops_file.secrets.data["pihole_admin_password"]))
