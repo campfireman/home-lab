@@ -30,6 +30,41 @@ scrape_configs:
     - job_name: 'node-exporter'
       static_configs:
         - targets: ['192.168.1.67:9100', '192.168.1.102:9100']
+    - job_name: 'speedtest'
+      metrics_path: /probe
+      params:
+        script: [speedtest]
+      static_configs:
+        - targets:
+          - speedtest.speedtest.svc.cluster.local:9469
+      scrape_interval: 20m
+      scrape_timeout: 90s
+    - job_name: 'script_exporter'
+      metrics_path: /metrics
+      static_configs:
+        - targets:
+          - speedtest.speedtest.svc.cluster.local:9469
+    - job_name: 'blackbox_icmp_targets'
+      metrics_path: /probe
+      params:
+        module: [icmp]
+      
+      static_configs:
+        - targets:
+            - www.google.com
+            - www.heise.de
+            - www.apple.com
+            - www.youtube.com
+
+      relabel_configs:
+        - source_labels: [__address__]
+          target_label: __param_target
+        
+        - source_labels: [__param_target]
+          target_label: instance
+        
+        - target_label: __address__
+          replacement: blackbox-exporter.blackbox-exporter.svc.cluster.local:9115
 EOF
   }
 }
