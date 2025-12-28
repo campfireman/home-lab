@@ -4,7 +4,6 @@
 - include_tasks: network.yml
 - include_tasks: pi-hole.yml
 - include_tasks: home-assistant.yml
-- include_tasks: nginx.yml
 - include_tasks: cron.yml
 - include_tasks:
     file: rclone.yml
