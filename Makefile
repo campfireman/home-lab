@@ -18,12 +18,6 @@ create-ca:
 	cat cluster.key | base64 | tr -d '\n' > cluster.key.base64
 	cat cluster.cer | base64 | tr -d '\n' > cluster.cer.base64
 
-install-requirements:
-	ansible-galaxy install -r "$(ANSIBLE_DIR)/requirements.yml"
-
-reset: install-requirements
-	$(call playbook,reset.yml)
-
 deploy: install-requirements
 	$(call playbook,site.yml)
 
@@ -47,6 +41,12 @@ deploy-rclone: install-requirements
 
 deploy-common-infra: install-requirements
 	$(call playbook_with_tag,common-infra)
+
+install-requirements:
+	ansible-galaxy install -r "$(ANSIBLE_DIR)/requirements.yml"
+
+reset: install-requirements
+	$(call playbook,reset.yml)
 
 terraform-init:
 	./scripts/terraform.sh init terraform
