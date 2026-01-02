@@ -14,6 +14,9 @@ resource "kubernetes_manifest" "traefik_config" {
           enabled: true
         additionalArguments:
           - "--entryPoints.mqtt.address=:1883/tcp"
+          - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s"
+          - "--entrypoints.websecure.transport.respondingTimeouts.writeTimeout=600s"
+          - "--entrypoints.websecure.transport.respondingTimeouts.idleTimeout=600s"
         ports:
             mqtt:
                 port: 1883
