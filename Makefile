@@ -13,6 +13,18 @@ define playbook_with_tag
 	$(call playbook,site.yml, -t $(1))
 endef
 
+build-setup-builder:
+	docker buildx create \                            
+--name container \
+--driver=docker-container --config buildkit.toml
+
+build-cookcli:
+	docker buildx build \
+--tag registry.home.arpa/cookcli:0.19.3 \
+--platform linux/arm64/v8,linux/amd64 \
+--builder container \
+--push docker/cookcli
+
 create-ca:
 	openssl req -x509 -newkey ec:<(openssl ecparam -name secp384r1) -sha256 -days 3650 -nodes -keyout cluster_t.key -out cluster_t.cer
 	cat cluster.key | base64 | tr -d '\n' > cluster.key.base64
