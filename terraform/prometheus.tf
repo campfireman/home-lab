@@ -53,8 +53,21 @@ scrape_configs:
         - targets:
             - www.google.com
             - www.heise.de
-            - www.apple.com
-            - www.youtube.com
+            - blog.ture.dev
+            - 1.1.1.1
+            
+            # --- PEERING STRESS POINTS (Cloudflare & Fastly) ---
+            - dash.cloudflare.com
+            - www.reddit.com
+            - sky.de
+            
+            # --- THE BACKBONE (DE-CIX & Transit) ---
+            - www.de-cix.net
+            - www.cogentco.com
+            
+            # --- INFRASTRUCTURE & MEDIA ---
+            - www.tagesschau.de
+            - speed.hetzner.de
 
       relabel_configs:
         - source_labels: [__address__]
