@@ -345,8 +345,8 @@ resource "grafana_dashboard" "btrfs_exporter_dashboard" {
   config_json = file("./dashboards/btrfs.json")
 }
 
-resource "grafana_dashboard" "speedtest_exporter_dashboard" {
+resource "grafana_dashboard" "internet_monitoring_dashboard" {
   folder      = grafana_folder.infrastructure.id
-  config_json = file("./dashboards/speedtest.json")
+  config_json = file("./dashboards/internet-monitoring.json")
 }
 

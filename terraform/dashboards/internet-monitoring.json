@@ -17,7 +17,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 0,
+  "id": 10,
   "links": [],
   "panels": [
     {
@@ -28,7 +28,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed"
           },
           "custom": {
             "axisPlacement": "auto",
@@ -38,16 +38,20 @@
               "tooltip": false,
               "viz": false
             },
-            "lineWidth": 1
+            "insertNulls": false,
+            "lineWidth": 0,
+            "spanNulls": false
           },
           "mappings": [
             {
               "options": {
                 "0": {
+                  "color": "dark-red",
                   "index": 1,
                   "text": "FAIL"
                 },
                 "1": {
+                  "color": "dark-green",
                   "index": 0,
                   "text": "OK"
                 }
@@ -61,10 +65,6 @@
               {
                 "color": "dark-red",
                 "value": 0
-              },
-              {
-                "color": "dark-green",
-                "value": 1
               }
             ]
           }
@@ -79,12 +79,13 @@
       },
       "id": 9,
       "options": {
-        "colWidth": 0.9,
+        "alignValue": "left",
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
+        "mergeValues": true,
         "rowHeight": 0.9,
         "showValue": "auto",
         "tooltip": {
@@ -107,7 +108,102 @@
         }
       ],
       "title": "Uptime",
-      "type": "status-history"
+      "type": "state-timeline"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "ff3jpa1l4kbnkc"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.0-18925857539",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(probe_duration_seconds) by (instance)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Request duration",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -176,9 +272,10 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 15
       },
       "id": 6,
+      "interval": "1m",
       "options": {
         "dataLinks": [],
         "legend": {
@@ -228,13 +325,13 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
-            "axisLabel": "",
+            "axisLabel": "Speed",
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
+            "fillOpacity": 100,
+            "gradientMode": "opacity",
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -247,9 +344,9 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
-            "spanNulls": false,
+            "spanNulls": true,
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -259,6 +356,7 @@
             }
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -272,7 +370,7 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "bps"
         },
         "overrides": []
       },
@@ -280,33 +378,42 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 15
       },
-      "id": 10,
+      "id": 8,
       "options": {
+        "dataLinks": [],
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max",
+            "min"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
       "pluginVersion": "12.3.0-18925857539",
       "targets": [
         {
+          "datasource": {
+            "uid": "${DS_PROMETHEUS}"
+          },
           "editorMode": "code",
-          "expr": "sum(probe_duration_seconds) by (instance)",
-          "legendFormat": "__auto",
+          "expr": "speedtest_upload_bytes*8",
+          "legendFormat": "Upload Speed",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Request duration",
+      "title": "Upstream",
       "type": "timeseries"
     },
     {
@@ -376,7 +483,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 23
       },
       "id": 4,
       "options": {
@@ -410,111 +517,6 @@
         }
       ],
       "title": "Latency",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ff3jpa1l4kbnkc"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "Speed",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 100,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "showValues": false,
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "id": 8,
-      "options": {
-        "dataLinks": [],
-        "legend": {
-          "calcs": [
-            "mean",
-            "lastNotNull",
-            "max",
-            "min"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.3.0-18925857539",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "speedtest_upload_bytes*8",
-          "legendFormat": "Upload Speed",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Upstream",
       "type": "timeseries"
     },
     {
@@ -585,7 +587,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 23
       },
       "id": 2,
       "options": {
@@ -633,12 +635,12 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Internet Speed",
+  "title": "Internet Monitoring",
   "uid": "MBmaYd9Wk",
-  "version": 4
+  "version": 18
 }
