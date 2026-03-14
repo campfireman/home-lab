@@ -31,21 +31,30 @@ resource "kubernetes_config_map" "transmission_config" {
     namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
   }
   data = {
-    OPENVPN_PROVIDER = "MULLVAD"
-    OPENVPN_CONFIG   = "de_all"
-    LOCAL_NETWORK    = "192.168.0.0/16"
+    CONFIG_FILE              = "/wg-config/wg0.conf"
   }
 }
 
-resource "kubernetes_secret" "transmission_vpn_credentials" {
+resource "kubernetes_secret" "wireguard_config" {
   metadata {
-    name      = "${local.transmission_name}-vpn-credentials"
+    name      = "wireguard-manual-config"
     namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
   }
+
   type = "Opaque"
+
   data = {
-    OPENVPN_USERNAME = data.sops_file.secrets.data["mullvad_username"]
-    OPENVPN_PASSWORD = data.sops_file.secrets.data["mullvad_password"]
+    "wg0.conf" = <<EOF
+[Interface]
+PrivateKey = ${data.sops_file.secrets.data["mullvad_private_key"]}
+Address = 10.70.217.243/32,fc00:bbbb:bbbb:bb01::7:d9f2/128
+DNS = 10.64.0.1
+
+[Peer]
+PublicKey = ${data.sops_file.secrets.data["mullvad_server_pubkey"]}
+AllowedIPs = 0.0.0.0/0,::0/0
+Endpoint = ${data.sops_file.secrets.data["mullvad_endpoint"]}
+EOF
   }
 }
 
@@ -70,7 +79,7 @@ resource "kubernetes_deployment" "transmission_deployment" {
       spec {
         container {
           name              = "${local.transmission_name}-container"
-          image             = "haugene/transmission-openvpn:5.3.2"
+          image             = "haugene/transmission-wireguard:main"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.transmission_port
@@ -82,33 +91,27 @@ resource "kubernetes_deployment" "transmission_deployment" {
             }
           }
 
-          env_from {
-            secret_ref {
-              name     = kubernetes_secret.transmission_vpn_credentials.metadata.0.name
-              optional = false
-            }
-          }
           security_context {
-            capabilities {
-              add = ["NET_ADMIN"]
-            }
+            privileged = true
           }
+
           liveness_probe {
             http_get {
               path   = "/"
               port   = local.transmission_port
               scheme = "HTTP"
             }
-            initial_delay_seconds = 5
-            period_seconds        = 15
+            initial_delay_seconds = 120
+            period_seconds        = 20
           }
+
           readiness_probe {
             http_get {
               path   = "/"
               port   = local.transmission_port
               scheme = "HTTP"
             }
-            initial_delay_seconds = 5
+            initial_delay_seconds = 30
             period_seconds        = 10
           }
           volume_mount {
@@ -119,11 +122,23 @@ resource "kubernetes_deployment" "transmission_deployment" {
             name       = "${local.transmission_name}-config"
             mount_path = "/config"
           }
+          volume_mount {
+            name       = "wireguard-conf-volume"
+            mount_path = "/wg-config/wg0.conf"
+            sub_path   = "wg0.conf"
+            read_only  = true
+          }
         }
         volume {
           name = "${local.transmission_name}-config"
           persistent_volume_claim {
             claim_name = kubernetes_persistent_volume_claim.transmission_config_pvc.metadata.0.name
+          }
+        }
+        volume {
+          name = "wireguard-conf-volume"
+          secret {
+            secret_name = kubernetes_secret.wireguard_config.metadata.0.name
           }
         }
         volume {
