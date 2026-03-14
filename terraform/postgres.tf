@@ -104,7 +104,7 @@ resource "kubernetes_stateful_set" "postgres" {
       spec {
         container {
           name              = local.postgres_name
-          image             = "postgres:18.1"
+          image             = "postgres:18.3"
           image_pull_policy = "IfNotPresent"
 
           port {
