@@ -64,7 +64,7 @@ resource "kubernetes_deployment" "miniflux" {
       spec {
         container {
           name              = "miniflux"
-          image             = "miniflux/miniflux:2.2.12"
+          image             = "miniflux/miniflux:2.2.17"
           image_pull_policy = "IfNotPresent"
 
           port {
