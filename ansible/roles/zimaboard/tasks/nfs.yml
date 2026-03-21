@@ -11,12 +11,30 @@
     group: nogroup
     state: directory
 
+- name: Setup NFS Backups Directory
+  ansible.builtin.file:
+    path: "{{ zimaboard_nfs_backups_directory }}"
+    owner: nobody
+    group: nogroup
+    state: directory
+
+- name: Setup NFS Postgres Backup Directory
+  ansible.builtin.file:
+    path: "{{ zimaboard_nfs_postgres_backup_directory }}"
+    owner: nobody
+    group: nogroup
+    state: directory
+
 - name: Setup NFS Export Configuration
   ansible.builtin.template:
     src: "exports.j2"
     dest: "/etc/exports"
     owner: root
     group: root
+
+- name: Reload NFS Configuration
+  ansible.builtin.command: exportfs -arv
+  become: true
 
 - name: Increase inotify Limits
   ansible.builtin.command: sysctl fs.inotify.max_user_watches=131072

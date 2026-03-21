@@ -1,4 +1,6 @@
 zimaboard_nfs_media_directory: "/var/nfs/media"
+zimaboard_nfs_backups_directory: "/var/nfs/backups"
+zimaboard_nfs_postgres_backup_directory: "{{ zimaboard_nfs_backups_directory }}/postgres"
 zimaboard_nfs_shared_ip_range: "192.168.1.0/24"
 
 config_dir: "/home/{{ ansible_user }}"
