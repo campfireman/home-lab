@@ -69,7 +69,7 @@ resource "kubernetes_deployment" "grafana" {
 
         container {
           name              = local.grafana_name
-          image             = "grafana/grafana:12.3.0-18925857539"
+          image             = "grafana/grafana:13.0.0-23336907879"
           image_pull_policy = "IfNotPresent"
 
           port {
