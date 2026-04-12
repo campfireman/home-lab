@@ -399,7 +399,7 @@ resource "kubernetes_deployment" "cloudflared" {
           name  = "cloudflared"
           image = "cloudflare/cloudflared:latest"
           
-          args  = ["tunnel", "--no-autoupdate", "run"]
+          args  = ["tunnel", "--metrics", "0.0.0.0:2000", "--no-autoupdate", "run",]
 
           env {
             name = "TUNNEL_TOKEN"
