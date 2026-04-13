@@ -143,3 +143,83 @@ module "miniflux_ingress" {
   tls_secret_name = "miniflux-tls"
   dns_target_ip   = local.master_node_ip
 }
+
+resource "kubernetes_secret" "miniflux_cloudflared_token" {
+  metadata {
+    name      = "cloudflared-token"
+    namespace = kubernetes_namespace.miniflux.metadata[0].name
+  }
+
+  type = "Opaque"
+
+  data = {
+    "tunnel_token" = data.sops_file.secrets.data["cloudflare_tunnel_token_miniflux"]
+  }
+}
+
+resource "kubernetes_deployment" "miniflux_cloudflared" {
+  metadata {
+    name      = "cloudflared"
+    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    labels = {
+      app = "cloudflared"
+    }
+  }
+
+  spec {
+    replicas = 2
+
+    selector {
+      match_labels = {
+        app = "cloudflared"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "cloudflared"
+        }
+      }
+
+      spec {
+        container {
+          name  = "cloudflared"
+          image = "cloudflare/cloudflared:latest"
+          
+          args  = ["tunnel", "--metrics", "0.0.0.0:2000", "--no-autoupdate", "run",]
+
+          env {
+            name = "TUNNEL_TOKEN"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.cloudflared_token.metadata[0].name
+                key  = "tunnel_token"
+              }
+            }
+          }
+
+          resources {
+            requests = {
+              cpu    = "50m"
+              memory = "128Mi"
+            }
+            limits = {
+              cpu    = "200m"
+              memory = "256Mi"
+            }
+          }
+          
+          liveness_probe {
+            http_get {
+              path = "/ready"
+              port = 2000
+            }
+            initial_delay_seconds = 10
+            period_seconds        = 10
+          }
+        }
+      }
+    }
+  }
+}
