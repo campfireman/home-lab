@@ -38,7 +38,7 @@ resource "kubernetes_deployment" "dating-turing-test" {
 
         container {
           name              = "dating-turing-test"
-          image             = "registry.home.arpa/campfireman/dating-turing-test:0.0.2"
+          image             = "registry.home.arpa/campfireman/dating-turing-test:0.0.3"
           image_pull_policy = "IfNotPresent"
 
 
