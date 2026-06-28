@@ -7,7 +7,7 @@ config_dir: "/home/{{ ansible_user }}"
 
 docker_network_name: "main_network"
 
-ha_version: "2026.3.1"
+ha_version: "2026.6.4"
 ha_port: 8123
 
 music_assistant_version: "2.6.3"
