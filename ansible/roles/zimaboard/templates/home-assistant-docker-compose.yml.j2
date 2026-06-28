@@ -14,6 +14,9 @@ services:
       - {{ ha_port }}:8123/tcp
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
 
   music-assistant:
     image: "ghcr.io/music-assistant/server:{{ music_assistant_version }}"
