@@ -330,6 +330,99 @@ resource "grafana_rule_group" "rule_group_infrastructure" {
   }
 }
 
+resource "grafana_folder" "applications" {
+  title = "Applications"
+}
+
+resource "grafana_rule_group" "rule_group_applications" {
+  org_id           = 1
+  name             = "High-Critical"
+  folder_uid       = grafana_folder.applications.uid
+  interval_seconds = 60
+
+  rule {
+    name      = "GoTubePollingStale"
+    condition = "B"
+
+    data {
+      ref_id = "A"
+
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+
+      datasource_uid = grafana_data_source.prometheus.uid
+      model          = "{\"disableTextWrap\":false,\"editorMode\":\"code\",\"expr\":\"time() - gotube_last_successful_poll_timestamp_seconds\",\"fullMetaSearch\":false,\"includeNullMetadata\":true,\"instant\":true,\"intervalMs\":1000,\"legendFormat\":\"__auto\",\"maxDataPoints\":43200,\"range\":false,\"refId\":\"A\",\"useBackend\":false}"
+    }
+    data {
+      ref_id = "B"
+
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+
+      datasource_uid = "__expr__"
+      model          = "{\"conditions\":[{\"evaluator\":{\"params\":[3600],\"type\":\"gt\"},\"operator\":{\"type\":\"and\"},\"query\":{\"params\":[\"C\"]},\"reducer\":{\"params\":[],\"type\":\"last\"},\"type\":\"query\"}],\"datasource\":{\"type\":\"__expr__\",\"uid\":\"__expr__\"},\"expression\":\"A\",\"intervalMs\":1000,\"maxDataPoints\":43200,\"refId\":\"B\",\"type\":\"threshold\"}"
+    }
+
+    no_data_state  = "NoData"
+    exec_err_state = "Error"
+    for            = "5m"
+    annotations    = {}
+    labels         = {}
+    is_paused      = false
+
+    notification_settings {
+      contact_point = grafana_contact_point.contact_point_home_assistant.name
+      group_by      = null
+      mute_timings  = null
+    }
+  }
+
+  rule {
+    name      = "GoTubeCanaryFailing"
+    condition = "B"
+
+    data {
+      ref_id = "A"
+
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+
+      datasource_uid = grafana_data_source.prometheus.uid
+      model          = "{\"disableTextWrap\":false,\"editorMode\":\"code\",\"expr\":\"gotube_canary_success\",\"fullMetaSearch\":false,\"includeNullMetadata\":true,\"instant\":true,\"intervalMs\":1000,\"legendFormat\":\"__auto\",\"maxDataPoints\":43200,\"range\":false,\"refId\":\"A\",\"useBackend\":false}"
+    }
+    data {
+      ref_id = "B"
+
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+
+      datasource_uid = "__expr__"
+      model          = "{\"conditions\":[{\"evaluator\":{\"params\":[1],\"type\":\"lt\"},\"operator\":{\"type\":\"and\"},\"query\":{\"params\":[\"C\"]},\"reducer\":{\"params\":[],\"type\":\"last\"},\"type\":\"query\"}],\"datasource\":{\"type\":\"__expr__\",\"uid\":\"__expr__\"},\"expression\":\"A\",\"intervalMs\":1000,\"maxDataPoints\":43200,\"refId\":\"B\",\"type\":\"threshold\"}"
+    }
+
+    no_data_state  = "NoData"
+    exec_err_state = "Error"
+    for            = "5m"
+    annotations    = {}
+    labels         = {}
+    is_paused      = false
+
+    notification_settings {
+      contact_point = grafana_contact_point.contact_point_home_assistant.name
+      group_by      = null
+      mute_timings  = null
+    }
+  }
+}
+
 resource "grafana_dashboard" "node_exporter_dashboard" {
   folder      = grafana_folder.infrastructure.id
   config_json = file("./dashboards/node-exporter.json")

@@ -44,6 +44,11 @@ scrape_configs:
       static_configs:
         - targets:
           - speedtest.speedtest.svc.cluster.local:9469
+    - job_name: 'go-tube'
+      metrics_path: /metrics
+      static_configs:
+        - targets:
+          - go-tube-service.go-tube.svc.cluster.local:80
     - job_name: 'blackbox_icmp_targets'
       metrics_path: /probe
       params:
