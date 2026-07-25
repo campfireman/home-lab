@@ -54,3 +54,6 @@ nextcloud_pass_obscured: !vault |
 
 local_nfs_path: "/var/nfs/media/completed/music"
 remote_target: "nextcloud:music/torrent"
+
+gotube_music_local_nfs_path: "/var/nfs/media/youtube/music"
+gotube_music_remote_target: "nextcloud:music/youtube"

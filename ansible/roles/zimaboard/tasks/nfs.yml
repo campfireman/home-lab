@@ -25,6 +25,22 @@
     group: nogroup
     state: directory
 
+- name: Setup NFS YouTube Music Directory
+  ansible.builtin.file:
+    path: "{{ zimaboard_nfs_media_directory }}/youtube/music"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
+- name: Setup NFS YouTube Video Directory
+  ansible.builtin.file:
+    path: "{{ zimaboard_nfs_media_directory }}/youtube/videos"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: '0755'
+
 - name: Setup NFS Export Configuration
   ansible.builtin.template:
     src: "exports.j2"

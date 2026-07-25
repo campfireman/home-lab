@@ -27,3 +27,10 @@
     minute: "0"
     job: "/usr/bin/rclone sync {{ local_nfs_path }} {{ remote_target }} --quiet"
     user: root
+
+- name: Create Cron Job for YouTube Music Sync
+  cron:
+    name: "Sync YouTube Music to Nextcloud"
+    minute: "0"
+    job: "/usr/bin/rclone sync {{ gotube_music_local_nfs_path }} {{ gotube_music_remote_target }} --quiet"
+    user: root
