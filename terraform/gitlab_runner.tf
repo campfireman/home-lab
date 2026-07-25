@@ -72,6 +72,12 @@ resource "helm_release" "gitlab_runner" {
               service_memory_request = "512Mi"
               service_cpu_limit = "2"
               service_memory_limit = "2Gi"
+            # Without this, the executor considers the pod "ready" as soon as
+            # its containers reach Running phase, not once dind has actually
+            # finished starting dockerd — a race that broke docker buildx
+            # create's connection to the dind service.
+            [runners.feature_flags]
+              FF_WAIT_FOR_POD_TO_BE_REACHABLE = true
         TOML
       }
     })
