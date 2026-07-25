@@ -44,11 +44,13 @@ resource "helm_release" "gitlab_runner" {
       }
 
       runners = {
-        # Not picked up by every job in every project by default — only
-        # jobs that explicitly set `tags: [home-lab]` land here (see
-        # go-tube's build-image/canary-gate/publish-latest jobs).
-        tags        = "home-lab"
-        runUntagged = false
+        # Tags and "run untagged" are NOT set here: with the runner
+        # authentication token flow (glrt-...), those are server-side
+        # properties of the runner record in GitLab itself (Settings >
+        # CI/CD > Runners > this runner > Edit) — the old config.toml/Helm
+        # `tags`/`runUntagged` values are ignored for this flow. Set the
+        # "home-lab" tag there to match go-tube's
+        # build-image/canary-gate/publish-latest jobs.
 
         # Kubernetes executor, privileged pod so the per-job docker:27-dind
         # service can build images. Trusting registry.home.arpa's
