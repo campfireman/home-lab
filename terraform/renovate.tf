@@ -19,6 +19,40 @@ resource "kubernetes_secret" "renovate_secrets" {
   }
 }
 
+# The cluster's internal-issuer root CA (cert-manager's cert-manager/internal-ca
+# secret) — the same CA that signs every INTERNAL_TLS ingress in this repo,
+# including registry.home.arpa's. Renovate's Node.js runtime doesn't trust it
+# by default, which breaks docker datasource lookups against
+# registry.home.arpa with UNABLE_TO_VERIFY_LEAF_SIGNATURE. This is the public
+# cert only (no key) — not secret material, so a ConfigMap is appropriate
+# rather than a sops-sourced Secret.
+resource "kubernetes_config_map" "renovate_internal_ca" {
+  metadata {
+    name      = "${local.renovate_name}-internal-ca"
+    namespace = kubernetes_namespace.renovate_namespace.metadata.0.name
+  }
+  data = {
+    "internal-ca.pem" = <<-EOT
+      -----BEGIN CERTIFICATE-----
+      MIICjDCCAhKgAwIBAgIUJUMXJ4pmlhpSg/7GMkq0YoJr/AcwCgYIKoZIzj0EAwIw
+      fTELMAkGA1UEBhMCREUxDDAKBgNVBAgMA0hBTTEMMAoGA1UEBwwDSEFNMQ4wDAYD
+      VQQKDAV0X25ldDELMAkGA1UECwwCSVQxFjAUBgNVBAMMDVR1cmUgQ2xhdXNzZW4x
+      HTAbBgkqhkiG9w0BCQEWDmFkbWluQHR1cmUuZGV2MB4XDTIzMDYyNzA4Mzc0N1oX
+      DTMzMDYyNDA4Mzc0N1owfTELMAkGA1UEBhMCREUxDDAKBgNVBAgMA0hBTTEMMAoG
+      A1UEBwwDSEFNMQ4wDAYDVQQKDAV0X25ldDELMAkGA1UECwwCSVQxFjAUBgNVBAMM
+      DVR1cmUgQ2xhdXNzZW4xHTAbBgkqhkiG9w0BCQEWDmFkbWluQHR1cmUuZGV2MHYw
+      EAYHKoZIzj0CAQYFK4EEACIDYgAElQTGRRskNUi+ojjJHCcmcFTN7zl1qqHsnIlI
+      LDJJLK5kM9PJdZCe4Ebvtz6SKPj1WiPgJ6hWcPbOFJyokUpDHYb4HfHqrcGCD87q
+      87CZnY1MUpFH1Cxy8fCpdj9Iern4o1MwUTAdBgNVHQ4EFgQU4ZIfpfVYB0DrWBPZ
+      wBTTpxHvCaswHwYDVR0jBBgwFoAU4ZIfpfVYB0DrWBPZwBTTpxHvCaswDwYDVR0T
+      AQH/BAUwAwEB/zAKBggqhkjOPQQDAgNoADBlAjEAp3N//h2LlYme1UL1sIaU2Lat
+      6ArETULdXWIgzRlH/LK3+1tKovTeP7MfQ5Bel54HAjAcvwP88+mDnCqR1krpoysW
+      S3k2AWMMEkk1Bdr7J2yEhXF1+7i5GUZS1vdIXj1NM4Y=
+      -----END CERTIFICATE-----
+    EOT
+  }
+}
+
 # Renovate has to run in-cluster rather than as a GitLab CI job: it needs the
 # docker datasource to resolve tags from registry.home.arpa, which only
 # resolves/routes on the home LAN — the same reason go-tube's own pipeline
@@ -81,20 +115,21 @@ resource "kubernetes_cron_job_v1" "renovate" {
                 name  = "RENOVATE_REPOSITORIES"
                 value = jsonencode(["CampFireMan/go-tube", "CampFireMan/home-lab"])
               }
-              # registry.home.arpa uses a self-signed cert with no CA
-              # trusted by this image's Node.js runtime — same reason
-              # go-tube's own CI passes dind `--insecure-registry` for it
-              # (see .gitlab-ci.yml). Without this, every docker datasource
-              # lookup against it fails with UNABLE_TO_VERIFY_LEAF_SIGNATURE.
+              # Trusts the cluster's internal CA (mounted below) so the
+              # docker datasource can verify registry.home.arpa's cert
+              # instead of just failing the TLS handshake. A hostRules
+              # insecureRegistry override was tried first but only made
+              # Renovate attempt plain HTTP, which the ingress 301-redirects
+              # back to HTTPS anyway — same verification failure either way.
               env {
-                name = "RENOVATE_HOST_RULES"
-                value = jsonencode([
-                  {
-                    matchHost        = "registry.home.arpa"
-                    hostType         = "docker"
-                    insecureRegistry = true
-                  }
-                ])
+                name  = "NODE_EXTRA_CA_CERTS"
+                value = "/etc/ssl/renovate/internal-ca.pem"
+              }
+
+              volume_mount {
+                name       = "internal-ca"
+                mount_path = "/etc/ssl/renovate"
+                read_only  = true
               }
 
               # Single-node cluster shared with every other home-lab
@@ -109,6 +144,13 @@ resource "kubernetes_cron_job_v1" "renovate" {
                   cpu    = "500m"
                   memory = "512Mi"
                 }
+              }
+            }
+
+            volume {
+              name = "internal-ca"
+              config_map {
+                name = kubernetes_config_map.renovate_internal_ca.metadata.0.name
               }
             }
           }
