@@ -16,6 +16,11 @@ resource "kubernetes_secret" "renovate_secrets" {
   }
   data = {
     RENOVATE_TOKEN = data.sops_file.secrets.data["renovate_gitlab_token"]
+    # Read-only/no-scope GitHub PAT — only used for release-notes lookups and
+    # resolving GitHub-hosted deps (e.g. hashicorp/terraform), not GitLab
+    # auth. GITHUB_COM_TOKEN is a Renovate-recognized env var name, distinct
+    # from the RENOVATE_*-prefixed config options.
+    GITHUB_COM_TOKEN = data.sops_file.secrets.data["renovate_github_token"]
   }
 }
 
