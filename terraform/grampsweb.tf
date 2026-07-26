@@ -133,7 +133,7 @@ resource "kubernetes_deployment" "grampsweb" {
         # --- Container 1: Web App ---
         container {
           name              = "grampsweb"
-          image             = "ghcr.io/gramps-project/grampsweb:26.4.1"
+          image             = "ghcr.io/gramps-project/grampsweb:26.7.0"
           image_pull_policy = "IfNotPresent"
 
           env {
@@ -236,7 +236,7 @@ resource "kubernetes_deployment" "grampsweb" {
         # --- Container 2: Celery Worker ---
         container {
           name              = "grampsweb-celery"
-          image             = "ghcr.io/gramps-project/grampsweb:26.4.1"
+          image             = "ghcr.io/gramps-project/grampsweb:26.7.0"
           image_pull_policy = "IfNotPresent"
           command           = ["celery", "-A", "gramps_webapi.celery", "worker", "--loglevel=INFO", "--concurrency=2"]
 
