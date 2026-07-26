@@ -1,6 +1,9 @@
 locals {
   go_tube_name = "go-tube"
   go_tube_port = 8080
+  # Bumped automatically by Renovate (see renovate.json's customManagers)
+  # whenever go-tube's CI publishes a newer immutable tag.
+  go_tube_tag = "2026.07.04-18354c00"
 }
 
 resource "kubernetes_namespace" "go_tube_namespace" {
@@ -65,7 +68,7 @@ resource "kubernetes_deployment" "go_tube_deployment" {
         }
         container {
           name              = "${local.go_tube_name}-container"
-          image             = "registry.home.arpa/go-tube:latest"
+          image             = "registry.home.arpa/go-tube:${local.go_tube_tag}"
           image_pull_policy = "Always"
           port {
             container_port = local.go_tube_port

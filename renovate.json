@@ -1,3 +1,17 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["^terraform/go_tube\\.tf$"],
+      "matchStrings": [
+        "go_tube_tag\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "go-tube",
+      "packageNameTemplate": "registry.home.arpa/go-tube",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "loose"
+    }
+  ]
 }
