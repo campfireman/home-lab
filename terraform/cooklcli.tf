@@ -16,7 +16,7 @@ resource "kubernetes_secret" "cookcli_secrets" {
 
   data = {
     RCLONE_CONFIG_NC_TYPE = "webdav"
-    RCLONE_CONFIG_NC_URL = data.sops_file.secrets.data["nextcloud_recipes_url"]
+    RCLONE_CONFIG_NC_URL  = data.sops_file.secrets.data["nextcloud_recipes_url"]
     RCLONE_CONFIG_NC_USER = data.sops_file.secrets.data["nextcloud_user"]
     RCLONE_CONFIG_NC_PASS = data.sops_file.secrets.data["nextcloud_password_rclone_obscured"]
   }
@@ -57,6 +57,16 @@ resource "kubernetes_deployment" "cookcli_deployment" {
         }
       }
       spec {
+        # ghcr.io/cooklang/cookcli's server runs as UID 1000 and refuses to
+        # start if /recipes isn't writable by it. fs_group makes kubelet
+        # chown the PVC's mounted subPath to group 1000 (and setgid it), so
+        # both the server (uid 1000) and the rclone init/sync containers
+        # (which run as root but still get this supplementary group) can
+        # write to it. Same pattern as go_tube.tf's security_context.
+        security_context {
+          fs_group = 1000
+        }
+
         init_container {
           name  = "init-sync"
           image = "rclone/rclone:sha-3e111cb"
@@ -74,8 +84,8 @@ resource "kubernetes_deployment" "cookcli_deployment" {
         }
 
         container {
-          name  = "server"
-          image = "ghcr.io/cooklang/cookcli:0.32.1"
+          name              = "server"
+          image             = "ghcr.io/cooklang/cookcli:0.32.1"
           image_pull_policy = "Always"
           port {
             container_port = local.cookcli_port
