@@ -4,7 +4,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["^terraform/go_tube\\.tf$"],
+      "managerFilePatterns": ["/^terraform/go_tube\\.tf$/"],
       "matchStrings": [
         "go_tube_tag\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ],
