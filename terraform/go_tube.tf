@@ -3,7 +3,7 @@ locals {
   go_tube_port = 8080
   # Bumped automatically by Renovate (see renovate.json's customManagers)
   # whenever go-tube's CI publishes a newer immutable tag.
-  go_tube_tag = "2026.07.04-18354c00"
+  go_tube_tag = "2026.07.04-ad9b77bd"
 }
 
 resource "kubernetes_namespace" "go_tube_namespace" {
