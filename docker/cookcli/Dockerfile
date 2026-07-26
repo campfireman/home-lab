@@ -1,4 +1,4 @@
-FROM node:18-slim AS ui-builder
+FROM node:24-slim AS ui-builder
 WORKDIR /src
 RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/cooklang/cookcli.git .
