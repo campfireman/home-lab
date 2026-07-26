@@ -147,7 +147,7 @@ resource "kubernetes_cron_job_v1" "renovate" {
                 }
                 limits = {
                   cpu    = "500m"
-                  memory = "512Mi"
+                  memory = "2048Mi"
                 }
               }
             }
