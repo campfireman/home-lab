@@ -81,6 +81,21 @@ resource "kubernetes_cron_job_v1" "renovate" {
                 name  = "RENOVATE_REPOSITORIES"
                 value = jsonencode(["CampFireMan/go-tube", "CampFireMan/home-lab"])
               }
+              # registry.home.arpa uses a self-signed cert with no CA
+              # trusted by this image's Node.js runtime — same reason
+              # go-tube's own CI passes dind `--insecure-registry` for it
+              # (see .gitlab-ci.yml). Without this, every docker datasource
+              # lookup against it fails with UNABLE_TO_VERIFY_LEAF_SIGNATURE.
+              env {
+                name = "RENOVATE_HOST_RULES"
+                value = jsonencode([
+                  {
+                    matchHost        = "registry.home.arpa"
+                    hostType         = "docker"
+                    insecureRegistry = true
+                  }
+                ])
+              }
 
               # Single-node cluster shared with every other home-lab
               # service — keep resource asks modest, same reasoning as
