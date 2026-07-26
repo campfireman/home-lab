@@ -188,3 +188,86 @@ module "go_tube_ingress" {
   tls_secret_name = "${local.go_tube_name}-tls"
   dns_target_ip   = local.master_node_ip
 }
+
+resource "kubernetes_cron_job_v1" "go_tube_backup" {
+  metadata {
+    name      = "${local.go_tube_name}-backup"
+    namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
+  }
+
+  spec {
+    schedule = "0 * * * *"
+    job_template {
+      metadata {
+        name      = "${local.go_tube_name}-backup"
+        namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
+      }
+      spec {
+        template {
+          metadata {
+            name = "${local.go_tube_name}-backup"
+          }
+
+          spec {
+            restart_policy = "OnFailure"
+
+            # /var/nfs/backups is owned by "nobody" (root-squash target) with mode 755,
+            # so the container must run as root to get root-squashed into write access.
+            security_context {
+              run_as_user     = 0
+              run_as_non_root = false
+            }
+
+            container {
+              name  = "${local.go_tube_name}-backup"
+              image = "registry.home.arpa/go-tube:${local.go_tube_tag}"
+
+              command = [
+                "/bin/sh",
+                "-c",
+                <<-EOT
+                set -e
+                BACKUP_DIR="/mnt/backup/${local.go_tube_name}"
+                mkdir -p "$BACKUP_DIR"
+                FILE_NAME="$BACKUP_DIR/state-$(date +%Y-%m-%d-%H%M).json"
+
+                echo "Backing up state.json..."
+                cp /data/state.json "$FILE_NAME"
+
+                echo "Cleaning up old backups (keeping 24)..."
+                cd "$BACKUP_DIR" && ls -t state-*.json | tail -n +25 | xargs -r rm
+                EOT
+              ]
+
+              volume_mount {
+                name       = "${local.go_tube_name}-data"
+                mount_path = "/data"
+                read_only  = true
+              }
+
+              volume_mount {
+                name       = "zimaboard-nfs-go-tube-backup"
+                mount_path = "/mnt/backup"
+              }
+            }
+
+            volume {
+              name = "${local.go_tube_name}-data"
+              persistent_volume_claim {
+                claim_name = kubernetes_persistent_volume_claim.go_tube_data_pvc.metadata.0.name
+              }
+            }
+
+            volume {
+              name = "zimaboard-nfs-go-tube-backup"
+              nfs {
+                server = "192.168.1.67"
+                path   = "/var/nfs/backups"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
