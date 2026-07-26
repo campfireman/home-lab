@@ -2,7 +2,7 @@ locals {
   speedtest_name = "speedtest"
 }
 
-resource "kubernetes_namespace" "speedtest" {
+resource "kubernetes_namespace_v1" "speedtest" {
     metadata {
       name = "speedtest"
     }
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "speedtest" {
 resource "kubernetes_deployment" "speedtest_exporter" {
   metadata {
     name      = local.speedtest_name
-    namespace = kubernetes_namespace.speedtest.metadata[0].name
+    namespace = kubernetes_namespace_v1.speedtest.metadata[0].name
     labels = {
       app = local.speedtest_name
     }
@@ -62,7 +62,7 @@ resource "kubernetes_deployment" "speedtest_exporter" {
 resource "kubernetes_service" "speedtest_exporter" {
   metadata {
     name      = local.speedtest_name
-    namespace = kubernetes_namespace.speedtest.metadata[0].name
+    namespace = kubernetes_namespace_v1.speedtest.metadata[0].name
     labels = {
       app     = local.speedtest_name
     }

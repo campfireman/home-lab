@@ -3,7 +3,7 @@ locals {
   rss_unlocker_port = 8080
 }
 
-resource "kubernetes_namespace" "rss_unlocker_namespace" {
+resource "kubernetes_namespace_v1" "rss_unlocker_namespace" {
   metadata {
     name = local.rss_unlocker_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "rss_unlocker_namespace" {
 resource "kubernetes_deployment" "rss_unlocker_deployment" {
   metadata {
     name      = "${local.rss_unlocker_name}-deployment"
-    namespace = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.rss_unlocker_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -63,7 +63,7 @@ resource "kubernetes_deployment" "rss_unlocker_deployment" {
 resource "kubernetes_service" "rss_unlocker_service" {
   metadata {
     name      = "${local.rss_unlocker_name}-service"
-    namespace = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.rss_unlocker_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -82,7 +82,7 @@ module "rss_unlocker_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.rss_unlocker_name}-ingress"
-  namespace       = kubernetes_namespace.rss_unlocker_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.rss_unlocker_namespace.metadata.0.name
   host            = "${local.rss_unlocker_name}.${local.domain}"
   service_name    = kubernetes_service.rss_unlocker_service.metadata[0].name
   service_port    = kubernetes_service.rss_unlocker_service.spec[0].port[0].port

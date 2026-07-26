@@ -4,7 +4,7 @@ locals {
   ha_port        = 8123
 }
 
-resource "kubernetes_namespace" "ha" {
+resource "kubernetes_namespace_v1" "ha" {
   metadata {
     name = local.ha_name
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "ha" {
 resource "kubernetes_service" "ha-service" {
   metadata {
     name      = "${local.ha_name}-ext"
-    namespace = kubernetes_namespace.ha.metadata[0].name
+    namespace = kubernetes_namespace_v1.ha.metadata[0].name
   }
   spec {
     port {
@@ -28,7 +28,7 @@ resource "kubernetes_service" "ha-service" {
 resource "kubernetes_endpoints" "ha" {
   metadata {
     name      = "${local.ha_name}-ext"
-    namespace = kubernetes_namespace.ha.metadata[0].name
+    namespace = kubernetes_namespace_v1.ha.metadata[0].name
   }
   subset {
     address {
@@ -45,7 +45,7 @@ module "ha_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.ha_name}-ingress"
-  namespace       = kubernetes_namespace.ha.metadata.0.name
+  namespace       = kubernetes_namespace_v1.ha.metadata.0.name
   host            = "${local.ha_name}.${local.domain}"
   service_name    = kubernetes_service.ha-service.metadata[0].name
   service_port    = kubernetes_service.ha-service.spec[0].port[0].port

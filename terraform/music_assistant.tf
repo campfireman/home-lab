@@ -4,7 +4,7 @@ locals {
   ma_port        = 8095
 }
 
-resource "kubernetes_namespace" "ma" {
+resource "kubernetes_namespace_v1" "ma" {
   metadata {
     name = local.ma_name
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "ma" {
 resource "kubernetes_service" "ma-service" {
   metadata {
     name      = "${local.ma_name}-ext"
-    namespace = kubernetes_namespace.ma.metadata[0].name
+    namespace = kubernetes_namespace_v1.ma.metadata[0].name
   }
   spec {
     port {
@@ -28,7 +28,7 @@ resource "kubernetes_service" "ma-service" {
 resource "kubernetes_endpoints_v1" "ma" {
   metadata {
     name      = "${local.ma_name}-ext"
-    namespace = kubernetes_namespace.ma.metadata[0].name
+    namespace = kubernetes_namespace_v1.ma.metadata[0].name
   }
   subset {
     address {
@@ -45,7 +45,7 @@ module "ma_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.ma_name}-ingress"
-  namespace       = kubernetes_namespace.ma.metadata.0.name
+  namespace       = kubernetes_namespace_v1.ma.metadata.0.name
   host            = "${local.ma_name}.${local.domain}"
   service_name    = kubernetes_service.ma-service.metadata[0].name
   service_port    = kubernetes_service.ma-service.spec[0].port[0].port

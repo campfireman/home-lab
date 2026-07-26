@@ -2,7 +2,7 @@ locals {
   gitlab_runner_name = "gitlab-runner"
 }
 
-resource "kubernetes_namespace" "gitlab_runner_namespace" {
+resource "kubernetes_namespace_v1" "gitlab_runner_namespace" {
   metadata {
     name = local.gitlab_runner_name
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "gitlab_runner_namespace" {
 # secrets.enc.json before this can be applied.
 resource "helm_release" "gitlab_runner" {
   name       = local.gitlab_runner_name
-  namespace  = kubernetes_namespace.gitlab_runner_namespace.metadata.0.name
+  namespace  = kubernetes_namespace_v1.gitlab_runner_namespace.metadata.0.name
   repository = "https://charts.gitlab.io"
   chart      = "gitlab-runner"
   version    = "0.91.0"

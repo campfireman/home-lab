@@ -22,7 +22,7 @@ import_resource() {
 }
 
 # Import namespace
-${TF_IMPORT_CMD} "kubernetes_namespace.${NAMESPACE}" $NAMESPACE
+${TF_IMPORT_CMD} "kubernetes_namespace_v1.${NAMESPACE}" $NAMESPACE
 
 # Import ConfigMap
 for cm in $(kubectl get configmap -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'); do

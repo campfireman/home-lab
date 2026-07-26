@@ -3,7 +3,7 @@ locals {
   grafana_port = 3000
 }
 
-resource "kubernetes_namespace" "grafana" {
+resource "kubernetes_namespace_v1" "grafana" {
   metadata {
     name = local.grafana_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "grafana" {
 resource "kubernetes_persistent_volume_claim" "grafana-pvc" {
   metadata {
     name      = "${local.grafana_name}-pvc"
-    namespace = kubernetes_namespace.grafana.metadata[0].name
+    namespace = kubernetes_namespace_v1.grafana.metadata[0].name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -28,7 +28,7 @@ resource "kubernetes_persistent_volume_claim" "grafana-pvc" {
 resource "kubernetes_secret" "grafana_secrets" {
   metadata {
     name      = "grafana-secrets"
-    namespace = kubernetes_namespace.grafana.metadata[0].name
+    namespace = kubernetes_namespace_v1.grafana.metadata[0].name
   }
 
   data = {
@@ -40,7 +40,7 @@ resource "kubernetes_secret" "grafana_secrets" {
 resource "kubernetes_deployment" "grafana" {
   metadata {
     name      = local.grafana_name
-    namespace = kubernetes_namespace.grafana.metadata[0].name
+    namespace = kubernetes_namespace_v1.grafana.metadata[0].name
     labels = {
       app = local.grafana_name
     }
@@ -138,7 +138,7 @@ resource "kubernetes_deployment" "grafana" {
 resource "kubernetes_service" "grafana-service" {
   metadata {
     name      = "${local.grafana_name}-service"
-    namespace = kubernetes_namespace.grafana.metadata[0].name
+    namespace = kubernetes_namespace_v1.grafana.metadata[0].name
   }
   spec {
     selector = {
@@ -157,7 +157,7 @@ module "grafana_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.grafana_name}-ingress"
-  namespace       = kubernetes_namespace.grafana.metadata.0.name
+  namespace       = kubernetes_namespace_v1.grafana.metadata.0.name
   host            = "${local.grafana_name}.${local.domain}"
   service_name    = kubernetes_service.grafana-service.metadata[0].name
   service_port    = kubernetes_service.grafana-service.spec[0].port[0].port

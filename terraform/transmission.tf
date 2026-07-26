@@ -3,7 +3,7 @@ locals {
   transmission_port = 9091
 }
 
-resource "kubernetes_namespace" "transmission_namespace" {
+resource "kubernetes_namespace_v1" "transmission_namespace" {
   metadata {
     name = local.transmission_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "transmission_namespace" {
 resource "kubernetes_persistent_volume_claim" "transmission_config_pvc" {
   metadata {
     name      = "${local.transmission_name}-config-pvc"
-    namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -28,7 +28,7 @@ resource "kubernetes_persistent_volume_claim" "transmission_config_pvc" {
 resource "kubernetes_config_map" "transmission_config" {
   metadata {
     name      = "${local.transmission_name}-config"
-    namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
   data = {
     CONFIG_FILE              = "/wg-config/wg0.conf"
@@ -38,7 +38,7 @@ resource "kubernetes_config_map" "transmission_config" {
 resource "kubernetes_secret" "wireguard_config" {
   metadata {
     name      = "wireguard-manual-config"
-    namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
 
   type = "Opaque"
@@ -61,7 +61,7 @@ EOF
 resource "kubernetes_deployment" "transmission_deployment" {
   metadata {
     name      = "${local.transmission_name}-deployment"
-    namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -156,7 +156,7 @@ resource "kubernetes_deployment" "transmission_deployment" {
 resource "kubernetes_service" "transmission_service" {
   metadata {
     name      = "${local.transmission_name}-service"
-    namespace = kubernetes_namespace.transmission_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -175,7 +175,7 @@ module "transmission_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.transmission_name}-ingress"
-  namespace       = kubernetes_namespace.transmission_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   host            = "${local.transmission_name}.${local.domain}"
   service_name    = kubernetes_service.transmission_service.metadata[0].name
   service_port    = kubernetes_service.transmission_service.spec[0].port[0].port

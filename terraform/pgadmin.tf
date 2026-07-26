@@ -2,7 +2,7 @@ locals {
   pgadmin_name = "pgadmin"
 }
 
-resource "kubernetes_namespace" "pgadmin" {
+resource "kubernetes_namespace_v1" "pgadmin" {
   metadata {
     name = "pgadmin"
   }
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "pgadmin" {
 resource "kubernetes_secret" "pgadmin_secrets" {
   metadata {
     name      = "pgadmin-secrets"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
+    namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
   }
 
   type = "Opaque"
@@ -24,7 +24,7 @@ resource "kubernetes_secret" "pgadmin_secrets" {
 resource "kubernetes_config_map" "pgadmin_config" {
   metadata {
     name      = "pgadmin-config"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
+    namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
   }
 
   data = {
@@ -49,7 +49,7 @@ resource "kubernetes_config_map" "pgadmin_config" {
 resource "kubernetes_persistent_volume_claim" "pgadmin_pvc" {
   metadata {
     name      = "pgadmin-pvc"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
+    namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -65,7 +65,7 @@ resource "kubernetes_persistent_volume_claim" "pgadmin_pvc" {
 resource "kubernetes_deployment" "pgadmin" {
   metadata {
     name      = "pgadmin"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
+    namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
     labels = {
       app = "pgadmin"
     }
@@ -178,7 +178,7 @@ resource "kubernetes_deployment" "pgadmin" {
 resource "kubernetes_service" "pgadmin_service" {
   metadata {
     name      = "pgadmin-service"
-    namespace = kubernetes_namespace.pgadmin.metadata[0].name
+    namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
   }
   spec {
     selector = {
@@ -196,7 +196,7 @@ module "pgadmin_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.pgadmin_name}-ingress"
-  namespace       = kubernetes_namespace.pgadmin.metadata.0.name
+  namespace       = kubernetes_namespace_v1.pgadmin.metadata.0.name
   host            = "${local.pgadmin_name}.${local.domain}"
   service_name    = kubernetes_service.pgadmin_service.metadata[0].name
   service_port    = kubernetes_service.pgadmin_service.spec[0].port[0].port

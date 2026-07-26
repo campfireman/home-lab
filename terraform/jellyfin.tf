@@ -3,7 +3,7 @@ locals {
   jellyfin_port = 8096
 }
 
-resource "kubernetes_namespace" "jellyfin_namespace" {
+resource "kubernetes_namespace_v1" "jellyfin_namespace" {
   metadata {
     name = local.jellyfin_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "jellyfin_namespace" {
 resource "kubernetes_config_map" "jellyfin_config" {
   metadata {
     name      = "${local.jellyfin_name}-config"
-    namespace = kubernetes_namespace.jellyfin_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
   }
   data = {
     TZ = "Europe/Berlin"
@@ -22,7 +22,7 @@ resource "kubernetes_config_map" "jellyfin_config" {
 resource "kubernetes_persistent_volume_claim" "jellyfin_config_pvc" {
   metadata {
     name      = "${local.jellyfin_name}-config-pvc"
-    namespace = kubernetes_namespace.jellyfin_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -38,7 +38,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_config_pvc" {
 resource "kubernetes_deployment" "jellyfin_deployment" {
   metadata {
     name      = "${local.jellyfin_name}-deployment"
-    namespace = kubernetes_namespace.jellyfin_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -123,7 +123,7 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
 resource "kubernetes_service" "jellyfin_service" {
   metadata {
     name      = "${local.jellyfin_name}-service"
-    namespace = kubernetes_namespace.jellyfin_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -142,7 +142,7 @@ module "jellyfin_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.jellyfin_name}-ingress"
-  namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
+  namespace       = kubernetes_namespace_v1.jellyfin_namespace.metadata[0].name
   host            = "jellyfin.${local.domain}"
   service_name    = kubernetes_service.jellyfin_service.metadata[0].name
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
@@ -155,7 +155,7 @@ module "jellyfin_ingress_unsafe" {
   source = "./modules/ingress"
 
   name            = "${local.jellyfin_name}-ingress-unsafe"
-  namespace       = kubernetes_namespace.jellyfin_namespace.metadata[0].name
+  namespace       = kubernetes_namespace_v1.jellyfin_namespace.metadata[0].name
   host            = "jellyfin-unsafe.${local.domain}"
   service_name    = kubernetes_service.jellyfin_service.metadata[0].name
   service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port

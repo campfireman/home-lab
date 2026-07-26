@@ -3,7 +3,7 @@ locals {
   registry_port = 5000
 }
 
-resource "kubernetes_namespace" "registry_namespace" {
+resource "kubernetes_namespace_v1" "registry_namespace" {
   metadata {
     name = local.registry_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "registry_namespace" {
 resource "kubernetes_persistent_volume_claim" "registry_pvc" {
   metadata {
     name      = "${local.registry_name}-pvc"
-    namespace = kubernetes_namespace.registry_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -28,7 +28,7 @@ resource "kubernetes_persistent_volume_claim" "registry_pvc" {
 resource "kubernetes_deployment" "registry_deployment" {
   metadata {
     name      = "${local.registry_name}-deployment"
-    namespace = kubernetes_namespace.registry_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -90,7 +90,7 @@ resource "kubernetes_deployment" "registry_deployment" {
 resource "kubernetes_service" "registry_service" {
   metadata {
     name      = "${local.registry_name}-service"
-    namespace = kubernetes_namespace.registry_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -109,7 +109,7 @@ module "registry_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.registry_name}-ingress"
-  namespace       = kubernetes_namespace.registry_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   host            = "${local.registry_name}.${local.domain}"
   service_name    = kubernetes_service.registry_service.metadata[0].name
   service_port    = kubernetes_service.registry_service.spec[0].port[0].port

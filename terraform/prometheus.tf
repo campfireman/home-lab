@@ -3,7 +3,7 @@ locals {
   prometheus_port = 9090
 }
 
-resource "kubernetes_namespace" "prometheus" {
+resource "kubernetes_namespace_v1" "prometheus" {
   metadata {
     name = local.prometheus_name
   }
@@ -90,7 +90,7 @@ EOF
 resource "kubernetes_persistent_volume_claim" "prometheus-pvc" {
   metadata {
     name      = "${local.prometheus_name}-pvc"
-    namespace = kubernetes_namespace.prometheus.metadata[0].name
+    namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -106,7 +106,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus-pvc" {
 resource "kubernetes_deployment" "prometheus" {
   metadata {
     name      = local.prometheus_name
-    namespace = kubernetes_namespace.prometheus.metadata[0].name
+    namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
     labels = {
       app = local.prometheus_name
     }
@@ -195,7 +195,7 @@ resource "kubernetes_deployment" "prometheus" {
 resource "kubernetes_service" "prometheus-service" {
   metadata {
     name      = "${local.prometheus_name}-service"
-    namespace = kubernetes_namespace.prometheus.metadata[0].name
+    namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
   }
   spec {
     selector = {
@@ -214,7 +214,7 @@ module "prometheus_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.prometheus_name}-ingress"
-  namespace       = kubernetes_namespace.prometheus.metadata.0.name
+  namespace       = kubernetes_namespace_v1.prometheus.metadata.0.name
   host            = "${local.prometheus_name}.${local.domain}"
   service_name    = kubernetes_service.prometheus-service.metadata[0].name
   service_port    = kubernetes_service.prometheus-service.spec[0].port[0].port

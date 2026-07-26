@@ -3,10 +3,10 @@ locals {
   go_tube_port = 8080
   # Bumped automatically by Renovate (see renovate.json's customManagers)
   # whenever go-tube's CI publishes a newer immutable tag.
-  go_tube_tag = "2026.07.04-ad9b77bd"
+  go_tube_tag = "2026.07.04-b6355ef6"
 }
 
-resource "kubernetes_namespace" "go_tube_namespace" {
+resource "kubernetes_namespace_v1" "go_tube_namespace" {
   metadata {
     name = local.go_tube_name
   }
@@ -15,7 +15,7 @@ resource "kubernetes_namespace" "go_tube_namespace" {
 resource "kubernetes_secret" "go_tube_secrets" {
   metadata {
     name      = "${local.go_tube_name}-secrets"
-    namespace = kubernetes_namespace.go_tube_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   }
   data = {
     MUSIC_PLAYLIST_URL = data.sops_file.secrets.data["gotube_music_playlist_url"]
@@ -26,7 +26,7 @@ resource "kubernetes_secret" "go_tube_secrets" {
 resource "kubernetes_persistent_volume_claim" "go_tube_data_pvc" {
   metadata {
     name      = "${local.go_tube_name}-data-pvc"
-    namespace = kubernetes_namespace.go_tube_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -42,7 +42,7 @@ resource "kubernetes_persistent_volume_claim" "go_tube_data_pvc" {
 resource "kubernetes_deployment" "go_tube_deployment" {
   metadata {
     name      = "${local.go_tube_name}-deployment"
-    namespace = kubernetes_namespace.go_tube_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -161,7 +161,7 @@ resource "kubernetes_deployment" "go_tube_deployment" {
 resource "kubernetes_service" "go_tube_service" {
   metadata {
     name      = "${local.go_tube_name}-service"
-    namespace = kubernetes_namespace.go_tube_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -180,7 +180,7 @@ module "go_tube_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.go_tube_name}-ingress"
-  namespace       = kubernetes_namespace.go_tube_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   host            = "${local.go_tube_name}.${local.domain}"
   service_name    = kubernetes_service.go_tube_service.metadata[0].name
   service_port    = kubernetes_service.go_tube_service.spec[0].port[0].port

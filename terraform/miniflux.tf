@@ -2,7 +2,7 @@ locals {
   miniflux_database = "miniflux"
 }
 
-resource "kubernetes_namespace" "miniflux" {
+resource "kubernetes_namespace_v1" "miniflux" {
   metadata {
     name = "miniflux"
   }
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "miniflux" {
 resource "kubernetes_config_map" "miniflux_config" {
   metadata {
     name      = "miniflux-config"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
     labels = {
       app = "miniflux"
     }
@@ -27,7 +27,7 @@ resource "kubernetes_config_map" "miniflux_config" {
 resource "kubernetes_secret" "miniflux_secrets" {
   metadata {
     name      = "miniflux-secrets"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
   }
 
   data = {
@@ -39,7 +39,7 @@ resource "kubernetes_secret" "miniflux_secrets" {
 resource "kubernetes_deployment" "miniflux" {
   metadata {
     name      = "miniflux"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
     labels = {
       app = "miniflux"
     }
@@ -114,7 +114,7 @@ resource "kubernetes_deployment" "miniflux" {
 resource "kubernetes_service" "miniflux_service" {
   metadata {
     name      = "miniflux-service"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
   }
 
   spec {
@@ -135,7 +135,7 @@ module "miniflux_ingress" {
   source = "./modules/ingress"
 
   name            = "miniflux-ingress"
-  namespace       = kubernetes_namespace.miniflux.metadata[0].name
+  namespace       = kubernetes_namespace_v1.miniflux.metadata[0].name
   host            = "miniflux.${local.domain}"
   service_name    = kubernetes_service.miniflux_service.metadata[0].name
   service_port    = kubernetes_service.miniflux_service.spec[0].port[0].port
@@ -147,7 +147,7 @@ module "miniflux_ingress" {
 resource "kubernetes_secret" "miniflux_cloudflared_token" {
   metadata {
     name      = "cloudflared-token"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
   }
 
   type = "Opaque"
@@ -160,7 +160,7 @@ resource "kubernetes_secret" "miniflux_cloudflared_token" {
 resource "kubernetes_deployment" "miniflux_cloudflared" {
   metadata {
     name      = "cloudflared"
-    namespace = kubernetes_namespace.miniflux.metadata[0].name
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
     labels = {
       app = "cloudflared"
     }

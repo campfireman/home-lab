@@ -5,7 +5,7 @@ locals {
   postgres_version               = "18.3"
 }
 
-resource "kubernetes_namespace" "postgres" {
+resource "kubernetes_namespace_v1" "postgres" {
   metadata {
     name = local.postgres_name
   }
@@ -14,7 +14,7 @@ resource "kubernetes_namespace" "postgres" {
 resource "kubernetes_config_map" "postgres_config" {
   metadata {
     name      = "${local.postgres_name}-config"
-    namespace = kubernetes_namespace.postgres.metadata.0.name
+    namespace = kubernetes_namespace_v1.postgres.metadata.0.name
     labels = {
       app = local.postgres_name
     }
@@ -29,7 +29,7 @@ resource "kubernetes_config_map" "postgres_config" {
 resource "kubernetes_secret" "postgres_secrets" {
   metadata {
     name      = "${local.postgres_name}-secrets"
-    namespace = kubernetes_namespace.postgres.metadata.0.name
+    namespace = kubernetes_namespace_v1.postgres.metadata.0.name
   }
 
   data = {
@@ -44,7 +44,7 @@ resource "kubernetes_secret" "postgres_secrets" {
 resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
   metadata {
     name      = "${local.postgres_name}-pvc"
-    namespace = kubernetes_namespace.postgres.metadata.0.name
+    namespace = kubernetes_namespace_v1.postgres.metadata.0.name
   }
 
   spec {
@@ -61,7 +61,7 @@ resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
 resource "kubernetes_service" "postgres_service" {
   metadata {
     name      = "${local.postgres_name}-service"
-    namespace = kubernetes_namespace.postgres.metadata.0.name
+    namespace = kubernetes_namespace_v1.postgres.metadata.0.name
     labels = {
       app = local.postgres_name
     }
@@ -82,7 +82,7 @@ resource "kubernetes_service" "postgres_service" {
 resource "kubernetes_stateful_set" "postgres" {
   metadata {
     name      = local.postgres_name
-    namespace = kubernetes_namespace.postgres.metadata.0.name
+    namespace = kubernetes_namespace_v1.postgres.metadata.0.name
   }
 
   spec {
@@ -144,7 +144,7 @@ resource "kubernetes_stateful_set" "postgres" {
 resource "kubernetes_cron_job_v1" "postgres_backup" {
   metadata {
     name      = "${local.postgres_name}-backup"
-    namespace = kubernetes_namespace.postgres.metadata[0].name
+    namespace = kubernetes_namespace_v1.postgres.metadata[0].name
   }
 
   spec {
@@ -152,7 +152,7 @@ resource "kubernetes_cron_job_v1" "postgres_backup" {
     job_template {
       metadata {
         name      = "${local.postgres_name}-backup"
-        namespace = kubernetes_namespace.postgres.metadata[0].name
+        namespace = kubernetes_namespace_v1.postgres.metadata[0].name
       }
       spec {
         template {

@@ -3,7 +3,7 @@ locals {
   cookcli_port = 9080
 }
 
-resource "kubernetes_namespace" "cookcli_namespace" {
+resource "kubernetes_namespace_v1" "cookcli_namespace" {
   metadata {
     name = local.cookcli_name
   }
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "cookcli_namespace" {
 resource "kubernetes_secret" "cookcli_secrets" {
   metadata {
     name      = "${local.cookcli_name}-secrets"
-    namespace = kubernetes_namespace.cookcli_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   }
 
   data = {
@@ -25,7 +25,7 @@ resource "kubernetes_secret" "cookcli_secrets" {
 resource "kubernetes_persistent_volume_claim" "cookcli_pvc" {
   metadata {
     name      = "${local.cookcli_name}-pvc"
-    namespace = kubernetes_namespace.cookcli_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -41,7 +41,7 @@ resource "kubernetes_persistent_volume_claim" "cookcli_pvc" {
 resource "kubernetes_deployment" "cookcli_deployment" {
   metadata {
     name      = "${local.cookcli_name}-deployment"
-    namespace = kubernetes_namespace.cookcli_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -130,7 +130,7 @@ resource "kubernetes_deployment" "cookcli_deployment" {
 resource "kubernetes_service" "cookcli_service" {
   metadata {
     name      = "${local.cookcli_name}-service"
-    namespace = kubernetes_namespace.cookcli_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -148,7 +148,7 @@ module "cookcli_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.cookcli_name}-ingress"
-  namespace       = kubernetes_namespace.cookcli_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   host            = "${local.cookcli_name}.${local.domain}"
   service_name    = kubernetes_service.cookcli_service.metadata[0].name
   service_port    = kubernetes_service.cookcli_service.spec[0].port[0].port

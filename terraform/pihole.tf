@@ -4,7 +4,7 @@ locals {
   pihole_port        = 8080
 }
 
-resource "kubernetes_namespace" "pihole" {
+resource "kubernetes_namespace_v1" "pihole" {
   metadata {
     name = local.pihole_name
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "pihole" {
 resource "kubernetes_service" "pihole-service" {
   metadata {
     name      = "${local.pihole_name}-ext"
-    namespace = kubernetes_namespace.pihole.metadata[0].name
+    namespace = kubernetes_namespace_v1.pihole.metadata[0].name
   }
   spec {
     port {
@@ -28,7 +28,7 @@ resource "kubernetes_service" "pihole-service" {
 resource "kubernetes_endpoints" "pihole" {
   metadata {
     name      = "${local.pihole_name}-ext"
-    namespace = kubernetes_namespace.pihole.metadata[0].name
+    namespace = kubernetes_namespace_v1.pihole.metadata[0].name
   }
   subset {
     address {
@@ -45,7 +45,7 @@ module "pihole_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.pihole_name}-ingress"
-  namespace       = kubernetes_namespace.pihole.metadata.0.name
+  namespace       = kubernetes_namespace_v1.pihole.metadata.0.name
   host            = "${local.pihole_name}.${local.domain}"
   service_name    = kubernetes_service.pihole-service.metadata[0].name
   service_port    = kubernetes_service.pihole-service.spec[0].port[0].port

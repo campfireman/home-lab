@@ -3,7 +3,7 @@ locals {
   renovate_version = "43.281.0"
 }
 
-resource "kubernetes_namespace" "renovate_namespace" {
+resource "kubernetes_namespace_v1" "renovate_namespace" {
   metadata {
     name = local.renovate_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "renovate_namespace" {
 resource "kubernetes_secret" "renovate_secrets" {
   metadata {
     name      = "${local.renovate_name}-secrets"
-    namespace = kubernetes_namespace.renovate_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
   }
   data = {
     RENOVATE_TOKEN = data.sops_file.secrets.data["renovate_gitlab_token"]
@@ -34,7 +34,7 @@ resource "kubernetes_secret" "renovate_secrets" {
 resource "kubernetes_config_map" "renovate_internal_ca" {
   metadata {
     name      = "${local.renovate_name}-internal-ca"
-    namespace = kubernetes_namespace.renovate_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
   }
   data = {
     "internal-ca.pem" = <<-EOT
@@ -67,7 +67,7 @@ resource "kubernetes_config_map" "renovate_internal_ca" {
 resource "kubernetes_cron_job_v1" "renovate" {
   metadata {
     name      = local.renovate_name
-    namespace = kubernetes_namespace.renovate_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
   }
 
   spec {
@@ -79,7 +79,7 @@ resource "kubernetes_cron_job_v1" "renovate" {
     job_template {
       metadata {
         name      = local.renovate_name
-        namespace = kubernetes_namespace.renovate_namespace.metadata.0.name
+        namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
       }
       spec {
         template {

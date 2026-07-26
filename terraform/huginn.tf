@@ -4,7 +4,7 @@ locals {
   huginn_digest = "1e0c359a46b1e84eb8c658404212eaf693b30e61"
 }
 
-resource "kubernetes_namespace" "huginn_namespace" {
+resource "kubernetes_namespace_v1" "huginn_namespace" {
   metadata {
     name = local.huginn_name
   }
@@ -13,7 +13,7 @@ resource "kubernetes_namespace" "huginn_namespace" {
 resource "kubernetes_secret" "huginn_credentials" {
   metadata {
     name      = "${local.huginn_name}-secrets"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
   type = "Opaque"
 
@@ -26,7 +26,7 @@ resource "kubernetes_secret" "huginn_credentials" {
 resource "kubernetes_config_map" "huginn_config" {
   metadata {
     name      = "${local.huginn_name}-config"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
 
   data = {
@@ -41,7 +41,7 @@ resource "kubernetes_config_map" "huginn_config" {
 resource "kubernetes_deployment" "huginn_deployment" {
   metadata {
     name      = "${local.huginn_name}-deployment"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -107,7 +107,7 @@ resource "kubernetes_deployment" "huginn_deployment" {
 resource "kubernetes_deployment" "huginn_worker_deployment" {
   metadata {
     name      = "${local.huginn_name}-worker-deployment"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -152,7 +152,7 @@ resource "kubernetes_deployment" "huginn_worker_deployment" {
 resource "kubernetes_service" "huginn_service" {
   metadata {
     name      = "${local.huginn_name}-service"
-    namespace = kubernetes_namespace.huginn_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -171,7 +171,7 @@ module "huginn_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.huginn_name}-ingress"
-  namespace       = kubernetes_namespace.huginn_namespace.metadata.0.name
+  namespace       = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   host            = "${local.huginn_name}.${local.domain}"
   service_name    = kubernetes_service.huginn_service.metadata[0].name
   service_port    = kubernetes_service.huginn_service.spec[0].port[0].port

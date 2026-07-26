@@ -2,7 +2,7 @@ locals {
   blackbox_name = "blackbox-exporter"
 }
 
-resource "kubernetes_namespace" "blackbox-exporter" {
+resource "kubernetes_namespace_v1" "blackbox-exporter" {
  metadata {
     name = local.blackbox_name
  } 
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "blackbox-exporter" {
 resource "kubernetes_config_map" "blackbox_config" {
   metadata {
     name      = "${local.blackbox_name}-config"
-    namespace = kubernetes_namespace.blackbox-exporter.metadata[0].name
+    namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
   }
 
   data = {
@@ -61,7 +61,7 @@ EOF
 resource "kubernetes_deployment" "blackbox_exporter" {
   metadata {
     name      = local.blackbox_name
-    namespace = kubernetes_namespace.blackbox-exporter.metadata[0].name
+    namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
     labels = {
       app = local.blackbox_name
     }
@@ -128,7 +128,7 @@ resource "kubernetes_deployment" "blackbox_exporter" {
 resource "kubernetes_service" "blackbox_exporter" {
   metadata {
     name      = local.blackbox_name
-    namespace = kubernetes_namespace.blackbox-exporter.metadata[0].name
+    namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
     labels = {
       app     = local.blackbox_name
     }

@@ -3,7 +3,7 @@ locals {
   port         = 1883
 }
 
-resource "kubernetes_namespace" "mosquitto_namespace" {
+resource "kubernetes_namespace_v1" "mosquitto_namespace" {
   metadata {
     name = local.service_name
   }
@@ -12,7 +12,7 @@ resource "kubernetes_namespace" "mosquitto_namespace" {
 resource "kubernetes_persistent_volume_claim" "mosquitto_pvc" {
   metadata {
     name      = "${local.service_name}-pvc"
-    namespace = kubernetes_namespace.mosquitto_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -28,7 +28,7 @@ resource "kubernetes_persistent_volume_claim" "mosquitto_pvc" {
 resource "kubernetes_config_map" "mosquitto_config" {
   metadata {
     name      = "${local.service_name}-config"
-    namespace = kubernetes_namespace.mosquitto_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
   }
   data = {
     "mosquitto.conf" = <<EOT
@@ -48,7 +48,7 @@ EOT
 resource "kubernetes_deployment" "mosquitto_deployment" {
   metadata {
     name      = "${local.service_name}-deployment"
-    namespace = kubernetes_namespace.mosquitto_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
   }
   spec {
     replicas = 1
@@ -117,7 +117,7 @@ resource "kubernetes_deployment" "mosquitto_deployment" {
 resource "kubernetes_service" "mosquitto_service" {
   metadata {
     name      = "${local.service_name}-service"
-    namespace = kubernetes_namespace.mosquitto_namespace.metadata.0.name
+    namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
   }
   spec {
     selector = {
@@ -138,7 +138,7 @@ resource "kubernetes_manifest" "ingressroutetcp_mosquitto_ingress" {
     "kind"       = "IngressRouteTCP"
     "metadata" = {
       "name"      = "${local.service_name}-ingress"
-      "namespace" = kubernetes_namespace.mosquitto_namespace.metadata.0.name
+      "namespace" = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
     }
     "spec" = {
       "entryPoints" = [

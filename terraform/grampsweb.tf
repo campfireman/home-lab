@@ -2,7 +2,7 @@ locals {
   grampsweb_name = "grampsweb"
 }
 
-resource "kubernetes_namespace" "grampsweb" {
+resource "kubernetes_namespace_v1" "grampsweb" {
   metadata {
     name = "grampsweb"
   }
@@ -11,7 +11,7 @@ resource "kubernetes_namespace" "grampsweb" {
 resource "kubernetes_persistent_volume_claim" "grampsweb_pvc" {
   metadata {
     name      = "grampsweb-pvc"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
   }
   spec {
     access_modes       = ["ReadWriteOnce"]
@@ -27,7 +27,7 @@ resource "kubernetes_persistent_volume_claim" "grampsweb_pvc" {
 resource "kubernetes_secret" "grampsweb_secrets" {
   metadata {
     name      = "grampsweb-secrets"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
   }
 
   type = "Opaque"
@@ -40,7 +40,7 @@ resource "kubernetes_secret" "grampsweb_secrets" {
 resource "kubernetes_service" "grampsweb_redis_service" {
   metadata {
     name      = "grampsweb-redis"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
   }
   spec {
     selector = {
@@ -57,7 +57,7 @@ resource "kubernetes_service" "grampsweb_redis_service" {
 resource "kubernetes_deployment" "grampsweb_redis" {
   metadata {
     name      = "grampsweb-redis"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
     labels = {
       app = "grampsweb-redis"
     }
@@ -105,7 +105,7 @@ resource "kubernetes_deployment" "grampsweb_redis" {
 resource "kubernetes_deployment" "grampsweb" {
   metadata {
     name      = "grampsweb"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
     labels = {
       app = "grampsweb"
     }
@@ -329,7 +329,7 @@ resource "kubernetes_deployment" "grampsweb" {
 resource "kubernetes_service" "grampsweb_service" {
   metadata {
     name      = "grampsweb-service"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
   }
   spec {
     selector = {
@@ -347,7 +347,7 @@ module "grampsweb_ingress" {
   source = "./modules/ingress"
 
   name            = "${local.grampsweb_name}-ingress"
-  namespace       = kubernetes_namespace.grampsweb.metadata.0.name
+  namespace       = kubernetes_namespace_v1.grampsweb.metadata.0.name
   host            = "${local.grampsweb_name}.${local.domain}"
   service_name    = kubernetes_service.grampsweb_service.metadata[0].name
   service_port    = kubernetes_service.grampsweb_service.spec[0].port[0].port
@@ -359,7 +359,7 @@ module "grampsweb_ingress" {
 resource "kubernetes_secret" "cloudflared_token" {
   metadata {
     name      = "cloudflared-token"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
   }
 
   type = "Opaque"
@@ -372,7 +372,7 @@ resource "kubernetes_secret" "cloudflared_token" {
 resource "kubernetes_deployment" "cloudflared" {
   metadata {
     name      = "cloudflared"
-    namespace = kubernetes_namespace.grampsweb.metadata[0].name
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
     labels = {
       app = "cloudflared"
     }
