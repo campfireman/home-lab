@@ -14,7 +14,7 @@ define playbook_with_tag
 endef
 
 build-setup-builder:
-	docker buildx create \                            
+	docker buildx create \
 --name container \
 --driver=docker-container --config buildkit.toml
 
