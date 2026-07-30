@@ -58,6 +58,7 @@ provider "pihole" {
 }
 
 provider "grafana" {
-  url  = "https://${local.grafana_name}.${local.domain}"
-  auth = "${data.sops_file.secrets.data["grafana_admin_user"]}:${data.sops_file.secrets.data["grafana_admin_password"]}"
+  url     = "https://${local.grafana_name}.${local.domain}"
+  auth    = "${data.sops_file.secrets.data["grafana_admin_user"]}:${data.sops_file.secrets.data["grafana_admin_password"]}"
+  ca_cert = data.sops_file.secrets.data["kubernetes_cluster_certificate"]
 }
