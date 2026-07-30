@@ -64,13 +64,13 @@ terraform-init:
 	./scripts/terraform.sh init terraform
 
 terraform-plan: terraform-init
-	./scripts/terraform.sh plan terraform deployer_service_account_token="$$(cat /tmp/token)"
+	./scripts/terraform.sh plan terraform
 
 terraform-apply: terraform-init
-	./scripts/terraform.sh apply terraform deployer_service_account_token="$$(cat /tmp/token)"
+	./scripts/terraform.sh apply terraform
 
 terraform-console: terraform-init
-	./scripts/terraform.sh console terraform deployer_service_account_token="$$(cat /tmp/token)"
+	./scripts/terraform.sh console terraform
 
 cluster-backup:
 	ssh -t ture@192.168.1.67 "sudo velero backup create ${BACKUP_NAME} --kubeconfig=/home/home-lab/.kube/config --wait && \

@@ -1,0 +1,50 @@
+# Applies terraform/ on every push to master that touches it, and once a
+# day via a GitLab Pipeline Schedule (Settings > CI/CD > Pipeline schedules
+# - not expressible here) so drift self-heals without a manual apply.
+#
+# Runs on the self-hosted runner deployed in
+# terraform/gitlab_runner.tf (tags: [home-lab]) since it's the only runner
+# that can reach the cluster's master node on the LAN.
+#
+# Secrets: terraform/secrets.enc.json is sops-encrypted for two recipients
+# (see .sops.yaml) - Ture's PGP key for local work, and a dedicated age key
+# for this pipeline. The age private key is the *only* secret stored in
+# GitLab (SOPS_AGE_KEY, masked+protected); everything else - including the
+# GCP service account key terraform itself needs for the GCS backend/
+# provider - lives encrypted in the repo. `sops` and the terraform `sops`
+# provider both pick up SOPS_AGE_KEY from the environment automatically.
+#
+# terraform init's GCS backend auth happens before any terraform provider
+# runs, so GOOGLE_APPLICATION_CREDENTIALS has to be materialized by hand in
+# before_script, ahead of `make terraform-apply`.
+
+stages:
+  - apply
+
+terraform-apply:
+  stage: apply
+  image: debian:bookworm-slim
+  tags:
+    - home-lab
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - terraform/**/*
+        - Makefile
+        - scripts/terraform.sh
+        - .terraform-version
+        - .gitlab-ci.yml
+  variables:
+    SOPS_VERSION: "3.13.3"
+    GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-key.json
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends bash make curl git unzip ca-certificates >/dev/null
+    - curl -sL -o /usr/local/bin/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+    - chmod +x /usr/local/bin/sops
+    - git clone --depth 1 https://github.com/tfutils/tfenv.git ~/.tfenv
+    - export PATH="$HOME/.tfenv/bin:$PATH"
+    - sops -d --extract '["gcp_deployer_sa_key"]' terraform/secrets.enc.json > "$GOOGLE_APPLICATION_CREDENTIALS"
+  script:
+    - export PATH="$HOME/.tfenv/bin:$PATH"
+    - make terraform-apply

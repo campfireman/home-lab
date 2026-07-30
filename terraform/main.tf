@@ -34,7 +34,7 @@ provider "google" {
 provider "kubernetes" {
   host = "https://${local.master_node_ip}:6443"
 
-  token    = var.deployer_service_account_token
+  token    = data.sops_file.secrets.data["deployer_service_account_token"]
   insecure = true
 }
 
@@ -42,7 +42,7 @@ provider "helm" {
   kubernetes {
     host = "https://${local.master_node_ip}:6443"
 
-    token    = var.deployer_service_account_token
+    token    = data.sops_file.secrets.data["deployer_service_account_token"]
     insecure = true
   }
 }

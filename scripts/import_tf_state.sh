@@ -4,7 +4,7 @@
 NAMESPACE=${1}
 SCRIPT_DIR=$(dirname "${0}")
 PROJECT_DIR=$(dirname "${SCRIPT_DIR}")
-TF_IMPORT_CMD="${SCRIPT_DIR}/terraform.sh import ${PROJECT_DIR}/terraform deployer_service_account_token=$(cat /tmp/token)"
+TF_IMPORT_CMD="${SCRIPT_DIR}/terraform.sh import ${PROJECT_DIR}/terraform"
 
 if [ -z "${NAMESPACE}" ]; then
     echo "Usage: ${0} <namespace>"

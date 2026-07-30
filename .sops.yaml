@@ -1,0 +1,8 @@
+keys:
+  - &ture_pgp 03C89B0783FD9A358CB8E591EE1D3B615B4E4DB7
+  - &ci_age age1yd6up6gr4jhjdtwtua9zlsuc8s9vch7j480ez828cumtjz9paqqsqv2c0a
+
+creation_rules:
+  - path_regex: terraform/.*\.enc\.json$
+    pgp: *ture_pgp
+    age: *ci_age
