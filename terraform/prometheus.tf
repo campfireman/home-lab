@@ -115,6 +115,14 @@ resource "kubernetes_deployment" "prometheus" {
   spec {
     replicas = 1
 
+    # Single replica on an RWO PVC: Prometheus flocks a lock file in its TSDB
+    # dir, so the default RollingUpdate (which starts the new pod before
+    # killing the old one for a single-replica deployment) makes the new pod
+    # fail to open storage while the old one is still holding the lock.
+    strategy {
+      type = "Recreate"
+    }
+
     selector {
       match_labels = {
         app = local.prometheus_name
