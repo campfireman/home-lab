@@ -135,7 +135,7 @@ resource "kubernetes_deployment" "prometheus" {
 
         container {
           name              = local.prometheus_name
-          image             = "prom/prometheus:v3.13.1"
+          image             = "prom/prometheus:v3.13.2"
           image_pull_policy = "IfNotPresent"
 
           port {
