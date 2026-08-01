@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "renovate_namespace" {
   }
 }
 
-resource "kubernetes_secret" "renovate_secrets" {
+resource "kubernetes_secret_v1" "renovate_secrets" {
   metadata {
     name      = "${local.renovate_name}-secrets"
     namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
@@ -31,7 +31,7 @@ resource "kubernetes_secret" "renovate_secrets" {
 # registry.home.arpa with UNABLE_TO_VERIFY_LEAF_SIGNATURE. This is the public
 # cert only (no key) — not secret material, so a ConfigMap is appropriate
 # rather than a sops-sourced Secret.
-resource "kubernetes_config_map" "renovate_internal_ca" {
+resource "kubernetes_config_map_v1" "renovate_internal_ca" {
   metadata {
     name      = "${local.renovate_name}-internal-ca"
     namespace = kubernetes_namespace_v1.renovate_namespace.metadata.0.name
@@ -99,7 +99,7 @@ resource "kubernetes_cron_job_v1" "renovate" {
 
               env_from {
                 secret_ref {
-                  name     = kubernetes_secret.renovate_secrets.metadata.0.name
+                  name     = kubernetes_secret_v1.renovate_secrets.metadata.0.name
                   optional = false
                 }
               }
@@ -155,7 +155,7 @@ resource "kubernetes_cron_job_v1" "renovate" {
             volume {
               name = "internal-ca"
               config_map {
-                name = kubernetes_config_map.renovate_internal_ca.metadata.0.name
+                name = kubernetes_config_map_v1.renovate_internal_ca.metadata.0.name
               }
             }
           }
