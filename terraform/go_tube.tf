@@ -12,7 +12,7 @@ resource "kubernetes_namespace_v1" "go_tube_namespace" {
   }
 }
 
-resource "kubernetes_secret" "go_tube_secrets" {
+resource "kubernetes_secret_v1" "go_tube_secrets" {
   metadata {
     name      = "${local.go_tube_name}-secrets"
     namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
@@ -23,7 +23,7 @@ resource "kubernetes_secret" "go_tube_secrets" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "go_tube_data_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "go_tube_data_pvc" {
   metadata {
     name      = "${local.go_tube_name}-data-pvc"
     namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
@@ -39,7 +39,7 @@ resource "kubernetes_persistent_volume_claim" "go_tube_data_pvc" {
   }
 }
 
-resource "kubernetes_deployment" "go_tube_deployment" {
+resource "kubernetes_deployment_v1" "go_tube_deployment" {
   metadata {
     name      = "${local.go_tube_name}-deployment"
     namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
@@ -76,7 +76,7 @@ resource "kubernetes_deployment" "go_tube_deployment" {
 
           env_from {
             secret_ref {
-              name     = kubernetes_secret.go_tube_secrets.metadata.0.name
+              name     = kubernetes_secret_v1.go_tube_secrets.metadata.0.name
               optional = false
             }
           }
@@ -144,7 +144,7 @@ resource "kubernetes_deployment" "go_tube_deployment" {
         volume {
           name = "${local.go_tube_name}-data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.go_tube_data_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.go_tube_data_pvc.metadata.0.name
           }
         }
         volume {
@@ -158,14 +158,14 @@ resource "kubernetes_deployment" "go_tube_deployment" {
   }
 }
 
-resource "kubernetes_service" "go_tube_service" {
+resource "kubernetes_service_v1" "go_tube_service" {
   metadata {
     name      = "${local.go_tube_name}-service"
     namespace = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.go_tube_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.go_tube_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 80
@@ -182,8 +182,8 @@ module "go_tube_ingress" {
   name            = "${local.go_tube_name}-ingress"
   namespace       = kubernetes_namespace_v1.go_tube_namespace.metadata.0.name
   host            = "${local.go_tube_name}.${local.domain}"
-  service_name    = kubernetes_service.go_tube_service.metadata[0].name
-  service_port    = kubernetes_service.go_tube_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.go_tube_service.metadata[0].name
+  service_port    = kubernetes_service_v1.go_tube_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.go_tube_name}-tls"
   dns_target_ip   = local.master_node_ip
@@ -254,7 +254,7 @@ resource "kubernetes_cron_job_v1" "go_tube_backup" {
             volume {
               name = "${local.go_tube_name}-data"
               persistent_volume_claim {
-                claim_name = kubernetes_persistent_volume_claim.go_tube_data_pvc.metadata.0.name
+                claim_name = kubernetes_persistent_volume_claim_v1.go_tube_data_pvc.metadata.0.name
               }
             }
 
