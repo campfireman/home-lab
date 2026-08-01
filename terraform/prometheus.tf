@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "prometheus" {
   }
 }
 
-resource "kubernetes_config_map" "prometheus_server_conf" {
+resource "kubernetes_config_map_v1" "prometheus_server_conf" {
   metadata {
     name      = "prometheus-server-conf"
     namespace = "prometheus"
@@ -87,7 +87,7 @@ EOF
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "prometheus-pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "prometheus-pvc" {
   metadata {
     name      = "${local.prometheus_name}-pvc"
     namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
@@ -103,7 +103,7 @@ resource "kubernetes_persistent_volume_claim" "prometheus-pvc" {
   }
 }
 
-resource "kubernetes_deployment" "prometheus" {
+resource "kubernetes_deployment_v1" "prometheus" {
   metadata {
     name      = local.prometheus_name
     namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
@@ -186,13 +186,13 @@ resource "kubernetes_deployment" "prometheus" {
         volume {
           name = "${local.prometheus_name}-config"
           config_map {
-            name = kubernetes_config_map.prometheus_server_conf.metadata[0].name
+            name = kubernetes_config_map_v1.prometheus_server_conf.metadata[0].name
           }
         }
         volume {
           name = "${local.prometheus_name}-pv"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.prometheus-pvc.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.prometheus-pvc.metadata[0].name
           }
         }
       }
@@ -200,7 +200,7 @@ resource "kubernetes_deployment" "prometheus" {
   }
 }
 
-resource "kubernetes_service" "prometheus-service" {
+resource "kubernetes_service_v1" "prometheus-service" {
   metadata {
     name      = "${local.prometheus_name}-service"
     namespace = kubernetes_namespace_v1.prometheus.metadata[0].name
@@ -224,8 +224,8 @@ module "prometheus_ingress" {
   name            = "${local.prometheus_name}-ingress"
   namespace       = kubernetes_namespace_v1.prometheus.metadata.0.name
   host            = "${local.prometheus_name}.${local.domain}"
-  service_name    = kubernetes_service.prometheus-service.metadata[0].name
-  service_port    = kubernetes_service.prometheus-service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.prometheus-service.metadata[0].name
+  service_port    = kubernetes_service_v1.prometheus-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.prometheus_name}-tls"
   dns_target_ip   = local.master_node_ip
