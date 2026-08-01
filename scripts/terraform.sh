@@ -22,12 +22,20 @@ function console() {
 }
 
 function print_usage() {
-  echo "Usage: $0 <init|plan|apply|import> <module_path_from_project_root> [var1=value1 var2=value2 ...] [positional_arg1 positional_args2 ...]"
+  echo "Usage: $0 <init|plan|apply|import|state-mv|state-rm> <module_path_from_project_root> [var1=value1 var2=value2 ...] [positional_arg1 positional_args2 ...]"
   exit 1
 }
 
 function import () {
   tfenv exec import ${TF_VARS_ARG} ${*}
+}
+
+function state-mv () {
+  tfenv exec state mv ${*}
+}
+
+function state-rm () {
+  tfenv exec state rm ${*}
 }
 
 CMD=${1}
@@ -72,6 +80,12 @@ console)
   ;;
 import)
   import ${*}
+  ;;
+state-mv)
+  state-mv ${*}
+  ;;
+state-rm)
+  state-rm ${*}
   ;;
 *)
   print_usage

@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "blackbox-exporter" {
  } 
 }
 
-resource "kubernetes_config_map" "blackbox_config" {
+resource "kubernetes_config_map_v1" "blackbox_config" {
   metadata {
     name      = "${local.blackbox_name}-config"
     namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
@@ -58,7 +58,7 @@ EOF
   }
 }
 
-resource "kubernetes_deployment" "blackbox_exporter" {
+resource "kubernetes_deployment_v1" "blackbox_exporter" {
   metadata {
     name      = local.blackbox_name
     namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
@@ -81,7 +81,7 @@ resource "kubernetes_deployment" "blackbox_exporter" {
           app = local.blackbox_name
         }
         annotations = {
-          "checksum/config" = sha256(kubernetes_config_map.blackbox_config.data["blackbox.yml"])
+          "checksum/config" = sha256(kubernetes_config_map_v1.blackbox_config.data["blackbox.yml"])
         }
       }
 
@@ -117,7 +117,7 @@ resource "kubernetes_deployment" "blackbox_exporter" {
         volume {
           name = "config"
           config_map {
-            name = kubernetes_config_map.blackbox_config.metadata[0].name
+            name = kubernetes_config_map_v1.blackbox_config.metadata[0].name
           }
         }
       }
@@ -125,7 +125,7 @@ resource "kubernetes_deployment" "blackbox_exporter" {
   }
 }
 
-resource "kubernetes_service" "blackbox_exporter" {
+resource "kubernetes_service_v1" "blackbox_exporter" {
   metadata {
     name      = local.blackbox_name
     namespace = kubernetes_namespace_v1.blackbox-exporter.metadata[0].name
