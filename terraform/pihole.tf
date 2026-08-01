@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "pihole" {
   }
 }
 
-resource "kubernetes_service" "pihole-service" {
+resource "kubernetes_service_v1" "pihole-service" {
   metadata {
     name      = "${local.pihole_name}-ext"
     namespace = kubernetes_namespace_v1.pihole.metadata[0].name
@@ -25,7 +25,7 @@ resource "kubernetes_service" "pihole-service" {
   }
 }
 
-resource "kubernetes_endpoints" "pihole" {
+resource "kubernetes_endpoints_v1" "pihole" {
   metadata {
     name      = "${local.pihole_name}-ext"
     namespace = kubernetes_namespace_v1.pihole.metadata[0].name
@@ -47,8 +47,8 @@ module "pihole_ingress" {
   name            = "${local.pihole_name}-ingress"
   namespace       = kubernetes_namespace_v1.pihole.metadata.0.name
   host            = "${local.pihole_name}.${local.domain}"
-  service_name    = kubernetes_service.pihole-service.metadata[0].name
-  service_port    = kubernetes_service.pihole-service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.pihole-service.metadata[0].name
+  service_port    = kubernetes_service_v1.pihole-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.pihole_name}-tls"
   dns_target_ip   = local.master_node_ip
