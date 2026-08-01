@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "transmission_namespace" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "transmission_config_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "transmission_config_pvc" {
   metadata {
     name      = "${local.transmission_name}-config-pvc"
     namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
@@ -25,7 +25,7 @@ resource "kubernetes_persistent_volume_claim" "transmission_config_pvc" {
   }
 }
 
-resource "kubernetes_config_map" "transmission_config" {
+resource "kubernetes_config_map_v1" "transmission_config" {
   metadata {
     name      = "${local.transmission_name}-config"
     namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
@@ -35,7 +35,7 @@ resource "kubernetes_config_map" "transmission_config" {
   }
 }
 
-resource "kubernetes_secret" "wireguard_config" {
+resource "kubernetes_secret_v1" "wireguard_config" {
   metadata {
     name      = "wireguard-manual-config"
     namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
@@ -58,7 +58,7 @@ EOF
   }
 }
 
-resource "kubernetes_deployment" "transmission_deployment" {
+resource "kubernetes_deployment_v1" "transmission_deployment" {
   metadata {
     name      = "${local.transmission_name}-deployment"
     namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
@@ -86,7 +86,7 @@ resource "kubernetes_deployment" "transmission_deployment" {
           }
           env_from {
             config_map_ref {
-              name     = kubernetes_config_map.transmission_config.metadata.0.name
+              name     = kubernetes_config_map_v1.transmission_config.metadata.0.name
               optional = false
             }
           }
@@ -132,13 +132,13 @@ resource "kubernetes_deployment" "transmission_deployment" {
         volume {
           name = "${local.transmission_name}-config"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.transmission_config_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.transmission_config_pvc.metadata.0.name
           }
         }
         volume {
           name = "wireguard-conf-volume"
           secret {
-            secret_name = kubernetes_secret.wireguard_config.metadata.0.name
+            secret_name = kubernetes_secret_v1.wireguard_config.metadata.0.name
           }
         }
         volume {
@@ -153,14 +153,14 @@ resource "kubernetes_deployment" "transmission_deployment" {
   }
 }
 
-resource "kubernetes_service" "transmission_service" {
+resource "kubernetes_service_v1" "transmission_service" {
   metadata {
     name      = "${local.transmission_name}-service"
     namespace = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.transmission_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.transmission_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 80
@@ -177,8 +177,8 @@ module "transmission_ingress" {
   name            = "${local.transmission_name}-ingress"
   namespace       = kubernetes_namespace_v1.transmission_namespace.metadata.0.name
   host            = "${local.transmission_name}.${local.domain}"
-  service_name    = kubernetes_service.transmission_service.metadata[0].name
-  service_port    = kubernetes_service.transmission_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.transmission_service.metadata[0].name
+  service_port    = kubernetes_service_v1.transmission_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.transmission_name}-tls"
   dns_target_ip   = local.master_node_ip
