@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "pgadmin" {
   }
 }
 
-resource "kubernetes_secret" "pgadmin_secrets" {
+resource "kubernetes_secret_v1" "pgadmin_secrets" {
   metadata {
     name      = "pgadmin-secrets"
     namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
@@ -21,7 +21,7 @@ resource "kubernetes_secret" "pgadmin_secrets" {
   }
 }
 
-resource "kubernetes_config_map" "pgadmin_config" {
+resource "kubernetes_config_map_v1" "pgadmin_config" {
   metadata {
     name      = "pgadmin-config"
     namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
@@ -46,7 +46,7 @@ resource "kubernetes_config_map" "pgadmin_config" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "pgadmin_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "pgadmin_pvc" {
   metadata {
     name      = "pgadmin-pvc"
     namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
@@ -62,7 +62,7 @@ resource "kubernetes_persistent_volume_claim" "pgadmin_pvc" {
   }
 }
 
-resource "kubernetes_deployment" "pgadmin" {
+resource "kubernetes_deployment_v1" "pgadmin" {
   metadata {
     name      = "pgadmin"
     namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
@@ -108,7 +108,7 @@ resource "kubernetes_deployment" "pgadmin" {
             name = "PGADMIN_DEFAULT_PASSWORD"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.pgadmin_secrets.metadata[0].name
+                name = kubernetes_secret_v1.pgadmin_secrets.metadata[0].name
                 key  = "pgadmin_password"
               }
             }
@@ -160,14 +160,14 @@ resource "kubernetes_deployment" "pgadmin" {
         volume {
           name = "pgadmin-config"
           config_map {
-            name = kubernetes_config_map.pgadmin_config.metadata[0].name
+            name = kubernetes_config_map_v1.pgadmin_config.metadata[0].name
           }
         }
 
         volume {
           name = "pgadmin-pv"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.pgadmin_pvc.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.pgadmin_pvc.metadata[0].name
           }
         }
       }
@@ -175,7 +175,7 @@ resource "kubernetes_deployment" "pgadmin" {
   }
 }
 
-resource "kubernetes_service" "pgadmin_service" {
+resource "kubernetes_service_v1" "pgadmin_service" {
   metadata {
     name      = "pgadmin-service"
     namespace = kubernetes_namespace_v1.pgadmin.metadata[0].name
@@ -198,8 +198,8 @@ module "pgadmin_ingress" {
   name            = "${local.pgadmin_name}-ingress"
   namespace       = kubernetes_namespace_v1.pgadmin.metadata.0.name
   host            = "${local.pgadmin_name}.${local.domain}"
-  service_name    = kubernetes_service.pgadmin_service.metadata[0].name
-  service_port    = kubernetes_service.pgadmin_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.pgadmin_service.metadata[0].name
+  service_port    = kubernetes_service_v1.pgadmin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.pgadmin_name}-tls"
   dns_target_ip   = local.master_node_ip
