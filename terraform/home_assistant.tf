@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "ha" {
   }
 }
 
-resource "kubernetes_service" "ha-service" {
+resource "kubernetes_service_v1" "ha-service" {
   metadata {
     name      = "${local.ha_name}-ext"
     namespace = kubernetes_namespace_v1.ha.metadata[0].name
@@ -25,7 +25,7 @@ resource "kubernetes_service" "ha-service" {
   }
 }
 
-resource "kubernetes_endpoints" "ha" {
+resource "kubernetes_endpoints_v1" "ha" {
   metadata {
     name      = "${local.ha_name}-ext"
     namespace = kubernetes_namespace_v1.ha.metadata[0].name
@@ -47,8 +47,8 @@ module "ha_ingress" {
   name            = "${local.ha_name}-ingress"
   namespace       = kubernetes_namespace_v1.ha.metadata.0.name
   host            = "${local.ha_name}.${local.domain}"
-  service_name    = kubernetes_service.ha-service.metadata[0].name
-  service_port    = kubernetes_service.ha-service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.ha-service.metadata[0].name
+  service_port    = kubernetes_service_v1.ha-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.ha_name}-tls"
   dns_target_ip   = local.master_node_ip
