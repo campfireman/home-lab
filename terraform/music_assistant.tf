@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "ma" {
   }
 }
 
-resource "kubernetes_service" "ma-service" {
+resource "kubernetes_service_v1" "ma-service" {
   metadata {
     name      = "${local.ma_name}-ext"
     namespace = kubernetes_namespace_v1.ma.metadata[0].name
@@ -47,8 +47,8 @@ module "ma_ingress" {
   name            = "${local.ma_name}-ingress"
   namespace       = kubernetes_namespace_v1.ma.metadata.0.name
   host            = "${local.ma_name}.${local.domain}"
-  service_name    = kubernetes_service.ma-service.metadata[0].name
-  service_port    = kubernetes_service.ma-service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.ma-service.metadata[0].name
+  service_port    = kubernetes_service_v1.ma-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.ma_name}-tls"
   dns_target_ip   = local.master_node_ip
