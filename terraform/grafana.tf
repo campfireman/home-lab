@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "grafana" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "grafana-pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "grafana-pvc" {
   metadata {
     name      = "${local.grafana_name}-pvc"
     namespace = kubernetes_namespace_v1.grafana.metadata[0].name
@@ -25,7 +25,7 @@ resource "kubernetes_persistent_volume_claim" "grafana-pvc" {
   }
 }
 
-resource "kubernetes_secret" "grafana_secrets" {
+resource "kubernetes_secret_v1" "grafana_secrets" {
   metadata {
     name      = "grafana-secrets"
     namespace = kubernetes_namespace_v1.grafana.metadata[0].name
@@ -37,7 +37,7 @@ resource "kubernetes_secret" "grafana_secrets" {
   }
 }
 
-resource "kubernetes_deployment" "grafana" {
+resource "kubernetes_deployment_v1" "grafana" {
   metadata {
     name      = local.grafana_name
     namespace = kubernetes_namespace_v1.grafana.metadata[0].name
@@ -80,7 +80,7 @@ resource "kubernetes_deployment" "grafana" {
             name = "GF_SECURITY_ADMIN_USER"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.grafana_secrets.metadata[0].name
+                name = kubernetes_secret_v1.grafana_secrets.metadata[0].name
                 key  = "GF_ADMIN_USER"
               }
             }
@@ -89,7 +89,7 @@ resource "kubernetes_deployment" "grafana" {
             name = "GF_SECURITY_ADMIN_PASSWORD"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.grafana_secrets.metadata[0].name
+                name = kubernetes_secret_v1.grafana_secrets.metadata[0].name
                 key  = "GF_ADMIN_PASSWORD"
               }
             }
@@ -127,7 +127,7 @@ resource "kubernetes_deployment" "grafana" {
         volume {
           name = "${local.grafana_name}-pv"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.grafana-pvc.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.grafana-pvc.metadata[0].name
           }
         }
       }
@@ -135,7 +135,7 @@ resource "kubernetes_deployment" "grafana" {
   }
 }
 
-resource "kubernetes_service" "grafana-service" {
+resource "kubernetes_service_v1" "grafana-service" {
   metadata {
     name      = "${local.grafana_name}-service"
     namespace = kubernetes_namespace_v1.grafana.metadata[0].name
@@ -159,8 +159,8 @@ module "grafana_ingress" {
   name            = "${local.grafana_name}-ingress"
   namespace       = kubernetes_namespace_v1.grafana.metadata.0.name
   host            = "${local.grafana_name}.${local.domain}"
-  service_name    = kubernetes_service.grafana-service.metadata[0].name
-  service_port    = kubernetes_service.grafana-service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.grafana-service.metadata[0].name
+  service_port    = kubernetes_service_v1.grafana-service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.grafana_name}-tls"
   dns_target_ip   = local.master_node_ip
