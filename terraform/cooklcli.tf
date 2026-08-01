@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "cookcli_namespace" {
     name = local.cookcli_name
   }
 }
-resource "kubernetes_secret" "cookcli_secrets" {
+resource "kubernetes_secret_v1" "cookcli_secrets" {
   metadata {
     name      = "${local.cookcli_name}-secrets"
     namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
@@ -22,7 +22,7 @@ resource "kubernetes_secret" "cookcli_secrets" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "cookcli_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "cookcli_pvc" {
   metadata {
     name      = "${local.cookcli_name}-pvc"
     namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
@@ -38,7 +38,7 @@ resource "kubernetes_persistent_volume_claim" "cookcli_pvc" {
   }
 }
 
-resource "kubernetes_deployment" "cookcli_deployment" {
+resource "kubernetes_deployment_v1" "cookcli_deployment" {
   metadata {
     name      = "${local.cookcli_name}-deployment"
     namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
@@ -119,7 +119,7 @@ resource "kubernetes_deployment" "cookcli_deployment" {
         volume {
           name = "data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.cookcli_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.cookcli_pvc.metadata.0.name
           }
         }
       }
@@ -127,7 +127,7 @@ resource "kubernetes_deployment" "cookcli_deployment" {
   }
 }
 
-resource "kubernetes_service" "cookcli_service" {
+resource "kubernetes_service_v1" "cookcli_service" {
   metadata {
     name      = "${local.cookcli_name}-service"
     namespace = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
@@ -150,8 +150,8 @@ module "cookcli_ingress" {
   name            = "${local.cookcli_name}-ingress"
   namespace       = kubernetes_namespace_v1.cookcli_namespace.metadata.0.name
   host            = "${local.cookcli_name}.${local.domain}"
-  service_name    = kubernetes_service.cookcli_service.metadata[0].name
-  service_port    = kubernetes_service.cookcli_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.cookcli_service.metadata[0].name
+  service_port    = kubernetes_service_v1.cookcli_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.cookcli_name}-tls"
   dns_target_ip   = local.master_node_ip
