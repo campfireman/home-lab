@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "registry_namespace" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "registry_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "registry_pvc" {
   metadata {
     name      = "${local.registry_name}-pvc"
     namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
@@ -25,7 +25,7 @@ resource "kubernetes_persistent_volume_claim" "registry_pvc" {
   }
 }
 
-resource "kubernetes_deployment" "registry_deployment" {
+resource "kubernetes_deployment_v1" "registry_deployment" {
   metadata {
     name      = "${local.registry_name}-deployment"
     namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
@@ -79,7 +79,7 @@ resource "kubernetes_deployment" "registry_deployment" {
         volume {
           name = "${local.registry_name}-data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.registry_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.registry_pvc.metadata.0.name
           }
         }
       }
@@ -87,14 +87,14 @@ resource "kubernetes_deployment" "registry_deployment" {
   }
 }
 
-resource "kubernetes_service" "registry_service" {
+resource "kubernetes_service_v1" "registry_service" {
   metadata {
     name      = "${local.registry_name}-service"
     namespace = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.registry_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.registry_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 80
@@ -111,8 +111,8 @@ module "registry_ingress" {
   name            = "${local.registry_name}-ingress"
   namespace       = kubernetes_namespace_v1.registry_namespace.metadata.0.name
   host            = "${local.registry_name}.${local.domain}"
-  service_name    = kubernetes_service.registry_service.metadata[0].name
-  service_port    = kubernetes_service.registry_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.registry_service.metadata[0].name
+  service_port    = kubernetes_service_v1.registry_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.registry_name}-tls"
   dns_target_ip   = local.master_node_ip
