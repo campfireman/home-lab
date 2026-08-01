@@ -51,7 +51,6 @@ resource "helm_release" "gitlab_runner" {
         # `tags`/`runUntagged` values are ignored for this flow. Set the
         # "home-lab" tag there to match go-tube's
         # build-image/canary-gate/publish-latest jobs.
-
         # Kubernetes executor, privileged pod so the per-job docker:27-dind
         # service can build images. Trusting registry.home.arpa's
         # self-signed cert is configured per-job in .gitlab-ci.yml (dind
@@ -83,8 +82,10 @@ resource "helm_release" "gitlab_runner" {
     })
   ]
 
-  set_sensitive {
-    name  = "runnerToken"
-    value = data.sops_file.secrets.data["gitlab_runner_token"]
-  }
+  set_sensitive = [
+    {
+      name  = "runnerToken"
+      value = data.sops_file.secrets.data["gitlab_runner_token"]
+    }
+  ]
 }

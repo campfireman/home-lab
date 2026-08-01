@@ -32,16 +32,14 @@ provider "google" {
 }
 
 provider "kubernetes" {
-  host = "https://${local.master_node_ip}:6443"
-
+  host     = "https://${local.master_node_ip}:6443"
   token    = data.sops_file.secrets.data["deployer_service_account_token"]
   insecure = true
 }
 
 provider "helm" {
-  kubernetes {
-    host = "https://${local.master_node_ip}:6443"
-
+  kubernetes = {
+    host     = "https://${local.master_node_ip}:6443"
     token    = data.sops_file.secrets.data["deployer_service_account_token"]
     insecure = true
   }
