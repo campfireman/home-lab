@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "miniflux" {
   }
 }
 
-resource "kubernetes_config_map" "miniflux_config" {
+resource "kubernetes_config_map_v1" "miniflux_config" {
   metadata {
     name      = "miniflux-config"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
@@ -24,7 +24,7 @@ resource "kubernetes_config_map" "miniflux_config" {
   }
 }
 
-resource "kubernetes_secret" "miniflux_secrets" {
+resource "kubernetes_secret_v1" "miniflux_secrets" {
   metadata {
     name      = "miniflux-secrets"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
@@ -36,7 +36,7 @@ resource "kubernetes_secret" "miniflux_secrets" {
   }
 }
 
-resource "kubernetes_deployment" "miniflux" {
+resource "kubernetes_deployment_v1" "miniflux" {
   metadata {
     name      = "miniflux"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
@@ -73,13 +73,13 @@ resource "kubernetes_deployment" "miniflux" {
 
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.miniflux_config.metadata[0].name
+              name = kubernetes_config_map_v1.miniflux_config.metadata[0].name
             }
           }
 
           env_from {
             secret_ref {
-              name = kubernetes_secret.miniflux_secrets.metadata[0].name
+              name = kubernetes_secret_v1.miniflux_secrets.metadata[0].name
             }
           }
 
@@ -111,7 +111,7 @@ resource "kubernetes_deployment" "miniflux" {
   }
 }
 
-resource "kubernetes_service" "miniflux_service" {
+resource "kubernetes_service_v1" "miniflux_service" {
   metadata {
     name      = "miniflux-service"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
@@ -137,14 +137,14 @@ module "miniflux_ingress" {
   name            = "miniflux-ingress"
   namespace       = kubernetes_namespace_v1.miniflux.metadata[0].name
   host            = "miniflux.${local.domain}"
-  service_name    = kubernetes_service.miniflux_service.metadata[0].name
-  service_port    = kubernetes_service.miniflux_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.miniflux_service.metadata[0].name
+  service_port    = kubernetes_service_v1.miniflux_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "miniflux-tls"
   dns_target_ip   = local.master_node_ip
 }
 
-resource "kubernetes_secret" "miniflux_cloudflared_token" {
+resource "kubernetes_secret_v1" "miniflux_cloudflared_token" {
   metadata {
     name      = "cloudflared-token"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
@@ -157,7 +157,7 @@ resource "kubernetes_secret" "miniflux_cloudflared_token" {
   }
 }
 
-resource "kubernetes_deployment" "miniflux_cloudflared" {
+resource "kubernetes_deployment_v1" "miniflux_cloudflared" {
   metadata {
     name      = "cloudflared"
     namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
