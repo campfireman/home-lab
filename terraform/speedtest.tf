@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "speedtest" {
     }
 }
 
-resource "kubernetes_deployment" "speedtest_exporter" {
+resource "kubernetes_deployment_v1" "speedtest_exporter" {
   metadata {
     name      = local.speedtest_name
     namespace = kubernetes_namespace_v1.speedtest.metadata[0].name
@@ -59,7 +59,7 @@ resource "kubernetes_deployment" "speedtest_exporter" {
   }
 }
 
-resource "kubernetes_service" "speedtest_exporter" {
+resource "kubernetes_service_v1" "speedtest_exporter" {
   metadata {
     name      = local.speedtest_name
     namespace = kubernetes_namespace_v1.speedtest.metadata[0].name
