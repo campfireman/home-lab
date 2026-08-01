@@ -193,7 +193,7 @@ resource "kubernetes_deployment_v1" "miniflux_cloudflared" {
             name = "TUNNEL_TOKEN"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.cloudflared_token.metadata[0].name
+                name = kubernetes_secret_v1.cloudflared_token.metadata[0].name
                 key  = "tunnel_token"
               }
             }

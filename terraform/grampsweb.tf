@@ -8,7 +8,7 @@ resource "kubernetes_namespace_v1" "grampsweb" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "grampsweb_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "grampsweb_pvc" {
   metadata {
     name      = "grampsweb-pvc"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -24,7 +24,7 @@ resource "kubernetes_persistent_volume_claim" "grampsweb_pvc" {
   }
 }
 
-resource "kubernetes_secret" "grampsweb_secrets" {
+resource "kubernetes_secret_v1" "grampsweb_secrets" {
   metadata {
     name      = "grampsweb-secrets"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -37,7 +37,7 @@ resource "kubernetes_secret" "grampsweb_secrets" {
   }
 }
 
-resource "kubernetes_service" "grampsweb_redis_service" {
+resource "kubernetes_service_v1" "grampsweb_redis_service" {
   metadata {
     name      = "grampsweb-redis"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -54,7 +54,7 @@ resource "kubernetes_service" "grampsweb_redis_service" {
   }
 }
 
-resource "kubernetes_deployment" "grampsweb_redis" {
+resource "kubernetes_deployment_v1" "grampsweb_redis" {
   metadata {
     name      = "grampsweb-redis"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -102,7 +102,7 @@ resource "kubernetes_deployment" "grampsweb_redis" {
   }
 }
 
-resource "kubernetes_deployment" "grampsweb" {
+resource "kubernetes_deployment_v1" "grampsweb" {
   metadata {
     name      = "grampsweb"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -156,7 +156,7 @@ resource "kubernetes_deployment" "grampsweb" {
             name = "GRAMPSWEB_SECRET_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.grampsweb_secrets.metadata[0].name
+                name = kubernetes_secret_v1.grampsweb_secrets.metadata[0].name
                 key  = "gramps_secret_key"
               }
             }
@@ -260,7 +260,7 @@ resource "kubernetes_deployment" "grampsweb" {
             name = "GRAMPSWEB_SECRET_KEY"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.grampsweb_secrets.metadata[0].name
+                name = kubernetes_secret_v1.grampsweb_secrets.metadata[0].name
                 key  = "gramps_secret_key"
               }
             }
@@ -318,7 +318,7 @@ resource "kubernetes_deployment" "grampsweb" {
         volume {
           name = "grampsweb-pv"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.grampsweb_pvc.metadata[0].name
+            claim_name = kubernetes_persistent_volume_claim_v1.grampsweb_pvc.metadata[0].name
           }
         }
       }
@@ -326,7 +326,7 @@ resource "kubernetes_deployment" "grampsweb" {
   }
 }
 
-resource "kubernetes_service" "grampsweb_service" {
+resource "kubernetes_service_v1" "grampsweb_service" {
   metadata {
     name      = "grampsweb-service"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -349,14 +349,14 @@ module "grampsweb_ingress" {
   name            = "${local.grampsweb_name}-ingress"
   namespace       = kubernetes_namespace_v1.grampsweb.metadata.0.name
   host            = "${local.grampsweb_name}.${local.domain}"
-  service_name    = kubernetes_service.grampsweb_service.metadata[0].name
-  service_port    = kubernetes_service.grampsweb_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.grampsweb_service.metadata[0].name
+  service_port    = kubernetes_service_v1.grampsweb_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.grampsweb_name}-tls"
   dns_target_ip   = local.master_node_ip
 }
 
-resource "kubernetes_secret" "cloudflared_token" {
+resource "kubernetes_secret_v1" "cloudflared_token" {
   metadata {
     name      = "cloudflared-token"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -369,7 +369,7 @@ resource "kubernetes_secret" "cloudflared_token" {
   }
 }
 
-resource "kubernetes_deployment" "cloudflared" {
+resource "kubernetes_deployment_v1" "cloudflared" {
   metadata {
     name      = "cloudflared"
     namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
@@ -405,7 +405,7 @@ resource "kubernetes_deployment" "cloudflared" {
             name = "TUNNEL_TOKEN"
             value_from {
               secret_key_ref {
-                name = kubernetes_secret.cloudflared_token.metadata[0].name
+                name = kubernetes_secret_v1.cloudflared_token.metadata[0].name
                 key  = "tunnel_token"
               }
             }
