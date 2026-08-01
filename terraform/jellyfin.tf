@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "jellyfin_namespace" {
   }
 }
 
-resource "kubernetes_config_map" "jellyfin_config" {
+resource "kubernetes_config_map_v1" "jellyfin_config" {
   metadata {
     name      = "${local.jellyfin_name}-config"
     namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
@@ -19,7 +19,7 @@ resource "kubernetes_config_map" "jellyfin_config" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "jellyfin_config_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "jellyfin_config_pvc" {
   metadata {
     name      = "${local.jellyfin_name}-config-pvc"
     namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
@@ -35,7 +35,7 @@ resource "kubernetes_persistent_volume_claim" "jellyfin_config_pvc" {
   }
 }
 
-resource "kubernetes_deployment" "jellyfin_deployment" {
+resource "kubernetes_deployment_v1" "jellyfin_deployment" {
   metadata {
     name      = "${local.jellyfin_name}-deployment"
     namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
@@ -63,7 +63,7 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
           }
           env_from {
             config_map_ref {
-              name     = kubernetes_config_map.jellyfin_config.metadata.0.name
+              name     = kubernetes_config_map_v1.jellyfin_config.metadata.0.name
               optional = false
             }
           }
@@ -104,7 +104,7 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
         volume {
           name = "${local.jellyfin_name}-config"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.jellyfin_config_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.jellyfin_config_pvc.metadata.0.name
           }
         }
         volume {
@@ -120,14 +120,14 @@ resource "kubernetes_deployment" "jellyfin_deployment" {
   }
 }
 
-resource "kubernetes_service" "jellyfin_service" {
+resource "kubernetes_service_v1" "jellyfin_service" {
   metadata {
     name      = "${local.jellyfin_name}-service"
     namespace = kubernetes_namespace_v1.jellyfin_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.jellyfin_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.jellyfin_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 80
@@ -144,8 +144,8 @@ module "jellyfin_ingress" {
   name            = "${local.jellyfin_name}-ingress"
   namespace       = kubernetes_namespace_v1.jellyfin_namespace.metadata[0].name
   host            = "jellyfin.${local.domain}"
-  service_name    = kubernetes_service.jellyfin_service.metadata[0].name
-  service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.jellyfin_service.metadata[0].name
+  service_port    = kubernetes_service_v1.jellyfin_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "jellyfin-tls"
   dns_target_ip   = local.master_node_ip
@@ -157,8 +157,8 @@ module "jellyfin_ingress_unsafe" {
   name            = "${local.jellyfin_name}-ingress-unsafe"
   namespace       = kubernetes_namespace_v1.jellyfin_namespace.metadata[0].name
   host            = "jellyfin-unsafe.${local.domain}"
-  service_name    = kubernetes_service.jellyfin_service.metadata[0].name
-  service_port    = kubernetes_service.jellyfin_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.jellyfin_service.metadata[0].name
+  service_port    = kubernetes_service_v1.jellyfin_service.spec[0].port[0].port
   tls_config      = "NO_TLS"
   tls_secret_name = "jellyfin-tls-unsafe"
   dns_target_ip   = local.master_node_ip
