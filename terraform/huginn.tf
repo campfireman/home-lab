@@ -10,7 +10,7 @@ resource "kubernetes_namespace_v1" "huginn_namespace" {
   }
 }
 
-resource "kubernetes_secret" "huginn_credentials" {
+resource "kubernetes_secret_v1" "huginn_credentials" {
   metadata {
     name      = "${local.huginn_name}-secrets"
     namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
@@ -23,7 +23,7 @@ resource "kubernetes_secret" "huginn_credentials" {
   }
 }
 
-resource "kubernetes_config_map" "huginn_config" {
+resource "kubernetes_config_map_v1" "huginn_config" {
   metadata {
     name      = "${local.huginn_name}-config"
     namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
@@ -38,7 +38,7 @@ resource "kubernetes_config_map" "huginn_config" {
   }
 }
 
-resource "kubernetes_deployment" "huginn_deployment" {
+resource "kubernetes_deployment_v1" "huginn_deployment" {
   metadata {
     name      = "${local.huginn_name}-deployment"
     namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
@@ -68,14 +68,14 @@ resource "kubernetes_deployment" "huginn_deployment" {
 
           env_from {
             secret_ref {
-              name     = kubernetes_secret.huginn_credentials.metadata.0.name
+              name     = kubernetes_secret_v1.huginn_credentials.metadata.0.name
               optional = false
             }
           }
 
           env_from {
             config_map_ref {
-              name     = kubernetes_config_map.huginn_config.metadata.0.name
+              name     = kubernetes_config_map_v1.huginn_config.metadata.0.name
               optional = false
             }
           }
@@ -104,7 +104,7 @@ resource "kubernetes_deployment" "huginn_deployment" {
   }
 }
 
-resource "kubernetes_deployment" "huginn_worker_deployment" {
+resource "kubernetes_deployment_v1" "huginn_worker_deployment" {
   metadata {
     name      = "${local.huginn_name}-worker-deployment"
     namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
@@ -132,14 +132,14 @@ resource "kubernetes_deployment" "huginn_worker_deployment" {
 
           env_from {
             secret_ref {
-              name     = kubernetes_secret.huginn_credentials.metadata.0.name
+              name     = kubernetes_secret_v1.huginn_credentials.metadata.0.name
               optional = false
             }
           }
 
           env_from {
             config_map_ref {
-              name     = kubernetes_config_map.huginn_config.metadata.0.name
+              name     = kubernetes_config_map_v1.huginn_config.metadata.0.name
               optional = false
             }
           }
@@ -149,14 +149,14 @@ resource "kubernetes_deployment" "huginn_worker_deployment" {
   }
 }
 
-resource "kubernetes_service" "huginn_service" {
+resource "kubernetes_service_v1" "huginn_service" {
   metadata {
     name      = "${local.huginn_name}-service"
     namespace = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.huginn_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.huginn_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 80
@@ -173,8 +173,8 @@ module "huginn_ingress" {
   name            = "${local.huginn_name}-ingress"
   namespace       = kubernetes_namespace_v1.huginn_namespace.metadata.0.name
   host            = "${local.huginn_name}.${local.domain}"
-  service_name    = kubernetes_service.huginn_service.metadata[0].name
-  service_port    = kubernetes_service.huginn_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.huginn_service.metadata[0].name
+  service_port    = kubernetes_service_v1.huginn_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = "${local.huginn_name}-tls"
   dns_target_ip   = local.master_node_ip
