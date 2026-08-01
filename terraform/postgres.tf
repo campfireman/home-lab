@@ -11,7 +11,7 @@ resource "kubernetes_namespace_v1" "postgres" {
   }
 }
 
-resource "kubernetes_config_map" "postgres_config" {
+resource "kubernetes_config_map_v1" "postgres_config" {
   metadata {
     name      = "${local.postgres_name}-config"
     namespace = kubernetes_namespace_v1.postgres.metadata.0.name
@@ -26,7 +26,7 @@ resource "kubernetes_config_map" "postgres_config" {
   }
 }
 
-resource "kubernetes_secret" "postgres_secrets" {
+resource "kubernetes_secret_v1" "postgres_secrets" {
   metadata {
     name      = "${local.postgres_name}-secrets"
     namespace = kubernetes_namespace_v1.postgres.metadata.0.name
@@ -41,7 +41,7 @@ resource "kubernetes_secret" "postgres_secrets" {
   type = "Opaque"
 }
 
-resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "postgres_pvc" {
   metadata {
     name      = "${local.postgres_name}-pvc"
     namespace = kubernetes_namespace_v1.postgres.metadata.0.name
@@ -58,7 +58,7 @@ resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
   }
 }
 
-resource "kubernetes_service" "postgres_service" {
+resource "kubernetes_service_v1" "postgres_service" {
   metadata {
     name      = "${local.postgres_name}-service"
     namespace = kubernetes_namespace_v1.postgres.metadata.0.name
@@ -79,7 +79,7 @@ resource "kubernetes_service" "postgres_service" {
   }
 }
 
-resource "kubernetes_stateful_set" "postgres" {
+resource "kubernetes_stateful_set_v1" "postgres" {
   metadata {
     name      = local.postgres_name
     namespace = kubernetes_namespace_v1.postgres.metadata.0.name
@@ -114,13 +114,13 @@ resource "kubernetes_stateful_set" "postgres" {
 
           env_from {
             secret_ref {
-              name = kubernetes_secret.postgres_secrets.metadata.0.name
+              name = kubernetes_secret_v1.postgres_secrets.metadata.0.name
             }
           }
 
           env_from {
             config_map_ref {
-              name = kubernetes_config_map.postgres_config.metadata.0.name
+              name = kubernetes_config_map_v1.postgres_config.metadata.0.name
             }
           }
 
@@ -133,7 +133,7 @@ resource "kubernetes_stateful_set" "postgres" {
         volume {
           name = "postgres-pv"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.postgres_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.postgres_pvc.metadata.0.name
           }
         }
       }
@@ -169,13 +169,13 @@ resource "kubernetes_cron_job_v1" "postgres_backup" {
 
               env_from {
                 secret_ref {
-                  name = kubernetes_secret.postgres_secrets.metadata.0.name
+                  name = kubernetes_secret_v1.postgres_secrets.metadata.0.name
                 }
               }
 
               env_from {
                 config_map_ref {
-                  name = kubernetes_config_map.postgres_config.metadata.0.name
+                  name = kubernetes_config_map_v1.postgres_config.metadata.0.name
                 }
               }
 
@@ -183,7 +183,7 @@ resource "kubernetes_cron_job_v1" "postgres_backup" {
                 name  = "PGPASSWORD"
                 value_from {
                   secret_key_ref {
-                    name = kubernetes_secret.postgres_secrets.metadata.0.name
+                    name = kubernetes_secret_v1.postgres_secrets.metadata.0.name
                     key  = "POSTGRES_PASSWORD"
                   }
                 }
@@ -197,7 +197,7 @@ resource "kubernetes_cron_job_v1" "postgres_backup" {
                 FILE_NAME="/mnt/backup/backup-$(date +%Y-%m-%d-%H%M).sql.gz"
                 
                 echo "Starting backup..."
-                pg_dumpall -h ${kubernetes_service.postgres_service.metadata.0.name} -U "$POSTGRES_USER" | gzip > "$FILE_NAME"
+                pg_dumpall -h ${kubernetes_service_v1.postgres_service.metadata.0.name} -U "$POSTGRES_USER" | gzip > "$FILE_NAME"
                 
                 echo "Cleaning up old backups (keeping 5)..."
                 cd /mnt/backup && ls -t backup-*.sql.gz | tail -n +6 | xargs -r rm
