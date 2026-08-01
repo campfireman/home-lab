@@ -356,6 +356,89 @@ module "grampsweb_ingress" {
   dns_target_ip   = local.master_node_ip
 }
 
+resource "kubernetes_cron_job_v1" "grampsweb_backup" {
+  metadata {
+    name      = "${local.grampsweb_name}-backup"
+    namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
+  }
+
+  spec {
+    schedule = "0 3 * * *"
+    job_template {
+      metadata {
+        name      = "${local.grampsweb_name}-backup"
+        namespace = kubernetes_namespace_v1.grampsweb.metadata[0].name
+      }
+      spec {
+        template {
+          metadata {
+            name = "${local.grampsweb_name}-backup"
+          }
+
+          spec {
+            restart_policy = "OnFailure"
+
+            # /var/nfs/backups is owned by "nobody" (root-squash target) with mode 755,
+            # so the container must run as root to get root-squashed into write access.
+            security_context {
+              run_as_user     = 0
+              run_as_non_root = false
+            }
+
+            container {
+              name  = "${local.grampsweb_name}-backup"
+              image = "ghcr.io/gramps-project/grampsweb:26.7.1"
+
+              command = [
+                "/bin/sh",
+                "-c",
+                <<-EOT
+                set -e
+                BACKUP_DIR="/mnt/backup/${local.grampsweb_name}"
+                mkdir -p "$BACKUP_DIR"
+                FILE_NAME="$BACKUP_DIR/${local.grampsweb_name}-$(date +%Y-%m-%d-%H%M).tar.gz"
+
+                echo "Backing up grampsweb data..."
+                tar -czf "$FILE_NAME" -C /source users secret grampsdb media
+
+                echo "Cleaning up old backups (keeping 14)..."
+                cd "$BACKUP_DIR" && ls -t ${local.grampsweb_name}-*.tar.gz | tail -n +15 | xargs -r rm
+                EOT
+              ]
+
+              volume_mount {
+                name       = "grampsweb-pv"
+                mount_path = "/source"
+                read_only  = true
+              }
+
+              volume_mount {
+                name       = "zimaboard-nfs-grampsweb-backup"
+                mount_path = "/mnt/backup"
+              }
+            }
+
+            volume {
+              name = "grampsweb-pv"
+              persistent_volume_claim {
+                claim_name = kubernetes_persistent_volume_claim_v1.grampsweb_pvc.metadata[0].name
+              }
+            }
+
+            volume {
+              name = "zimaboard-nfs-grampsweb-backup"
+              nfs {
+                server = "192.168.1.67"
+                path   = "/var/nfs/backups"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 resource "kubernetes_secret_v1" "cloudflared_token" {
   metadata {
     name      = "cloudflared-token"
