@@ -4,7 +4,7 @@ locals {
   traefik_dashboard_port      = 8080
 }
 
-resource "kubernetes_service" "traefik_dashboard_service" {
+resource "kubernetes_service_v1" "traefik_dashboard_service" {
   metadata {
     name      = "${local.traefik_dashboard_name}-service"
     namespace = local.traefik_dashboard_namespace
@@ -33,8 +33,8 @@ module "taefik_dashboard_ingress" {
   name            = "${local.traefik_dashboard_name}-ingress"
   namespace       = local.traefik_dashboard_namespace
   host            = "${local.traefik_dashboard_name}.${local.domain}"
-  service_name    = kubernetes_service.traefik_dashboard_service.metadata[0].name
-  service_port    = kubernetes_service.traefik_dashboard_service.spec[0].port[0].port
+  service_name    = kubernetes_service_v1.traefik_dashboard_service.metadata[0].name
+  service_port    = kubernetes_service_v1.traefik_dashboard_service.spec[0].port[0].port
   tls_config      = "INTERNAL_TLS"
   tls_secret_name = local.traefik_dashboard_name
   dns_target_ip   = local.master_node_ip
