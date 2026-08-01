@@ -9,7 +9,7 @@ resource "kubernetes_namespace_v1" "mosquitto_namespace" {
   }
 }
 
-resource "kubernetes_persistent_volume_claim" "mosquitto_pvc" {
+resource "kubernetes_persistent_volume_claim_v1" "mosquitto_pvc" {
   metadata {
     name      = "${local.service_name}-pvc"
     namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
@@ -25,7 +25,7 @@ resource "kubernetes_persistent_volume_claim" "mosquitto_pvc" {
   }
 }
 
-resource "kubernetes_config_map" "mosquitto_config" {
+resource "kubernetes_config_map_v1" "mosquitto_config" {
   metadata {
     name      = "${local.service_name}-config"
     namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
@@ -45,7 +45,7 @@ EOT
 
 }
 
-resource "kubernetes_deployment" "mosquitto_deployment" {
+resource "kubernetes_deployment_v1" "mosquitto_deployment" {
   metadata {
     name      = "${local.service_name}-deployment"
     namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
@@ -100,13 +100,13 @@ resource "kubernetes_deployment" "mosquitto_deployment" {
         volume {
           name = "${local.service_name}-conf"
           config_map {
-            name = kubernetes_config_map.mosquitto_config.metadata.0.name
+            name = kubernetes_config_map_v1.mosquitto_config.metadata.0.name
           }
         }
         volume {
           name = "${local.service_name}-data"
           persistent_volume_claim {
-            claim_name = kubernetes_persistent_volume_claim.mosquitto_pvc.metadata.0.name
+            claim_name = kubernetes_persistent_volume_claim_v1.mosquitto_pvc.metadata.0.name
           }
         }
       }
@@ -114,14 +114,14 @@ resource "kubernetes_deployment" "mosquitto_deployment" {
   }
 }
 
-resource "kubernetes_service" "mosquitto_service" {
+resource "kubernetes_service_v1" "mosquitto_service" {
   metadata {
     name      = "${local.service_name}-service"
     namespace = kubernetes_namespace_v1.mosquitto_namespace.metadata.0.name
   }
   spec {
     selector = {
-      app = kubernetes_deployment.mosquitto_deployment.spec.0.template.0.metadata.0.labels.app
+      app = kubernetes_deployment_v1.mosquitto_deployment.spec.0.template.0.metadata.0.labels.app
     }
     port {
       port        = 1883
@@ -149,7 +149,7 @@ resource "kubernetes_manifest" "ingressroutetcp_mosquitto_ingress" {
           "match" = "HostSNI(`*`)"
           "services" = [
             {
-              "name" = kubernetes_service.mosquitto_service.metadata.0.name
+              "name" = kubernetes_service_v1.mosquitto_service.metadata.0.name
               "port" = local.port
             },
           ]
