@@ -66,3 +66,4 @@ Keep these in mind. Prefer solutions that fit the guiding principles above.
 - Explain trade-offs before you use a new tool or pattern.
 - Write commit messages in the past tense. Start with a verb, for example "Added ...", "Fixed ...", "Refactored ...".
 - For any documentation or writing stick to ASD-STE100 Simplified Technical English.
+- There is a Makefile containing many common commands to be performed like terraform-apply. This file helps finding wrapper scripts etc. If there is a matching command in this file it should be preferred.
