@@ -94,6 +94,15 @@ resource "kubernetes_deployment_v1" "grafana" {
               }
             }
           }
+          env {
+            name  = "GF_INSTALL_PLUGINS"
+            value = "victoriametrics-logs-datasource"
+          }
+          env {
+            # The plugin isn't signed yet, so it needs an explicit allowlist.
+            name  = "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS"
+            value = "victoriametrics-logs-datasource"
+          }
 
           readiness_probe {
             http_get {
@@ -191,6 +200,16 @@ resource "grafana_data_source" "prometheus" {
   secure_json_data_encoded = jsonencode({
     tlsCACert = data.sops_file.secrets.data["kubernetes_cluster_certificate"]
   })
+}
+
+resource "grafana_data_source" "victorialogs" {
+  provider = grafana
+
+  type = "victoriametrics-logs-datasource"
+  name = "victorialogs"
+  url  = "http://${kubernetes_service_v1.victorialogs-service.metadata[0].name}.${kubernetes_namespace_v1.logging.metadata[0].name}.svc.cluster.local"
+
+  access_mode = "proxy"
 }
 
 resource "grafana_contact_point" "contact_point_home_assistant" {
