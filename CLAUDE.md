@@ -52,6 +52,7 @@ GitLab CI runs one job: `terraform-apply`. It runs on a self-hosted runner insid
 Keep these in mind. Prefer solutions that fit the guiding principles above.
 
 - Add a logging sink for the cluster.
+- Observability of workloads aside from logs
 - Set up a new node with OPNsense. It will replace the current ASUS router.
 - Add long-term storage for Home Assistant data.
 - Add more workloads that give value at home.
