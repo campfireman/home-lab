@@ -92,7 +92,7 @@ resource "kubernetes_deployment_v1" "n8n" {
 
         container {
           name              = local.n8n_name
-          image             = "docker.io/n8nio/n8n:2.32.7"
+          image             = "docker.io/n8nio/n8n:2.34.4"
           image_pull_policy = "IfNotPresent"
 
           port {
