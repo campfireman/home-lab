@@ -85,7 +85,7 @@ resource "kubernetes_deployment_v1" "cookcli_deployment" {
 
         container {
           name              = "server"
-          image             = "ghcr.io/cooklang/cookcli:0.32.1"
+          image             = "ghcr.io/cooklang/cookcli:0.33.1"
           image_pull_policy = "Always"
           port {
             container_port = local.cookcli_port
