@@ -8,6 +8,20 @@ Currently, the k8s cluster runs on a Ryzen-based, Alibaba-bought server. There a
 
 ![hardware](./docs/hardware.jpg)
 
+## MCP servers
+
+This repo defines the n8n MCP server in `.mcp.json`. The server needs an access
+token. The token is in `terraform/secrets.enc.json`. Do not put the token in a
+file that git tracks.
+
+Before you start Claude Code, run this command in your shell:
+
+    source ./scripts/load_n8n_mcp_env.sh
+
+This command decrypts the token and sets it as an environment variable for
+your current shell. Claude Code reads this variable when it connects to the
+n8n MCP server.
+
 ## Services
 
 ```mermaid
