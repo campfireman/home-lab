@@ -18,9 +18,10 @@ resource "kubernetes_config_map_v1" "miniflux_config" {
   }
 
   data = {
-    RUN_MIGRATIONS = "1"
-    CREATE_ADMIN   = "1"
-    ADMIN_USERNAME = "admin"
+    RUN_MIGRATIONS                 = "1"
+    CREATE_ADMIN                   = "1"
+    ADMIN_USERNAME                 = "admin"
+    FETCHER_ALLOW_PRIVATE_NETWORKS = "1"
   }
 }
 
@@ -186,8 +187,8 @@ resource "kubernetes_deployment_v1" "miniflux_cloudflared" {
         container {
           name  = "cloudflared"
           image = "cloudflare/cloudflared:latest"
-          
-          args  = ["tunnel", "--metrics", "0.0.0.0:2000", "--no-autoupdate", "run",]
+
+          args = ["tunnel", "--metrics", "0.0.0.0:2000", "--no-autoupdate", "run", ]
 
           env {
             name = "TUNNEL_TOKEN"
@@ -209,7 +210,7 @@ resource "kubernetes_deployment_v1" "miniflux_cloudflared" {
               memory = "256Mi"
             }
           }
-          
+
           liveness_probe {
             http_get {
               path = "/ready"
