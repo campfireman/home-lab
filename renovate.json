@@ -14,6 +14,86 @@
       "packageNameTemplate": "registry.home.arpa/go-tube",
       "datasourceTemplate": "docker",
       "versioningTemplate": "loose"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/zimaboard/vars/main\\.yml$/"],
+      "matchStrings": [
+        "ha_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "home-assistant",
+      "packageNameTemplate": "homeassistant/home-assistant",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/zimaboard/vars/main\\.yml$/"],
+      "matchStrings": [
+        "music_assistant_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "music-assistant",
+      "packageNameTemplate": "ghcr.io/music-assistant/server",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/zimaboard/vars/main\\.yml$/"],
+      "matchStrings": [
+        "pihole_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "pihole",
+      "packageNameTemplate": "pihole/pihole",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/common-infra/vars/main\\.yml$/"],
+      "matchStrings": [
+        "node_exporter_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "node-exporter",
+      "packageNameTemplate": "quay.io/prometheus/node-exporter",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^ansible/roles/common-infra/vars/main\\.yml$/",
+        "/^ansible/roles/zimaboard/vars/main\\.yml$/"
+      ],
+      "matchStrings": [
+        "smartctl_exporter_version:\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "smartctl-exporter",
+      "packageNameTemplate": "prometheuscommunity/smartctl-exporter",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/services/tasks/kubernetes-dashboard\\.yml$/"],
+      "matchStrings": [
+        "image:\\s*kubernetesui/dashboard:(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "kubernetes-dashboard",
+      "packageNameTemplate": "kubernetesui/dashboard",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^ansible/roles/services/tasks/kubernetes-dashboard\\.yml$/"],
+      "matchStrings": [
+        "image:\\s*kubernetesui/metrics-scraper:(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "dashboard-metrics-scraper",
+      "packageNameTemplate": "kubernetesui/metrics-scraper",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker"
     }
   ]
 }
