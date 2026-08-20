@@ -1,0 +1,13 @@
+---
+# There is no service to run here. A task spec is a YAML file that lives
+# next to the code it acts on, in each project's own repository - agentctl
+# (phase 9) reads it from there, not from this host. This task only installs
+# a reference copy on the host so the format is documented somewhere the
+# owner will actually see it.
+- name: Install task spec reference template
+  ansible.builtin.copy:
+    src: task-spec.example.yaml
+    dest: /srv/agent/etc/task-spec.example.yaml
+    owner: root
+    group: root
+    mode: "0644"

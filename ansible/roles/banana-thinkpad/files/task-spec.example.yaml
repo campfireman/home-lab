@@ -1,0 +1,42 @@
+# Template for a task spec - the audit record of what one agent run is
+# allowed to do. agentctl (phase 9) reads exactly one of these files and
+# needs no other arguments.
+#
+# A real task spec lives next to the code it acts on, in the project's own
+# repository - not on this host. This copy is a reference template only.
+
+name: fix-auth-timeout
+image: ghcr.io/you/agent-python:2026-08
+
+context:
+  repo: myproject
+  base: main
+  prompt: ./prompts/fix-auth-timeout.md
+  knowledge:
+    - ./kb/architecture.md
+    - ./kb/coding-standards.md
+
+network:
+  allow:
+    - proxy.golang.org
+    - pkg.go.dev
+
+# Must name servers this host actually runs - see the mcp-<name>.service
+# units on banana-thinkpad. Adding a server here does nothing on its own;
+# agentctl still has to open its nftables port for the run (phase 9).
+mcp:
+  - filesystem
+  - fetch
+
+# banana-thinkpad has 12 cores / 30G RAM. These defaults leave room for
+# several concurrent runs; raise per-run limits only when a task actually
+# needs more.
+limits:
+  cpus: 2
+  memory: 4G
+  wall_clock: 45m
+
+outputs:
+  keep:
+    - /out
+    - /workspace/.git
