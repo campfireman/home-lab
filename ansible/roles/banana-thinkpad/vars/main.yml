@@ -32,6 +32,11 @@ broker_tokens_dir: /srv/agent/etc/broker-tokens
 anthropic_api_key_file: /srv/agent/etc/anthropic_api_key
 broker_log: /srv/agent/log/broker.log
 
+mcp_venv_dir: /opt/agent-host/mcp/venv
+mcp_fetch_port: 9100
+mcp_filesystem_port: 9101
+mcp_filesystem_root: /srv/runs
+
 anthropic_api_key: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61363730393732383966366332353736616534636633663738326531636534326363303533613266

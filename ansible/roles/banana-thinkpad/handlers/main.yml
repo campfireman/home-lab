@@ -30,3 +30,15 @@
     name: git-http-server
     daemon_reload: true
     state: restarted
+
+- name: restart mcp-fetch
+  ansible.builtin.systemd:
+    name: mcp-fetch
+    daemon_reload: true
+    state: restarted
+
+- name: restart mcp-filesystem
+  ansible.builtin.systemd:
+    name: mcp-filesystem
+    daemon_reload: true
+    state: restarted

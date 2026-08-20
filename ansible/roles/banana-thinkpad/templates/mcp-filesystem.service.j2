@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+[Unit]
+Description=MCP filesystem server (SSE, via mcp-proxy)
+After=network.target
+
+[Service]
+DynamicUser=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ReadWritePaths={{ mcp_filesystem_root }}
+ExecStart={{ mcp_venv_dir }}/bin/mcp-proxy --host {{ agent_bridge_gateway }} --port {{ mcp_filesystem_port }} -- {{ mcp_filesystem_bin }} {{ mcp_filesystem_root }}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

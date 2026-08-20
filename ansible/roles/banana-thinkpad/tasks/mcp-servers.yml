@@ -1,0 +1,68 @@
+---
+# The official reference MCP servers (fetch, filesystem) only speak stdio -
+# they have no built-in network listener. mcp-proxy is the standard bridge
+# that spawns a stdio server as a subprocess and exposes it over SSE on a
+# fixed host:port, which is what step 33 actually needs.
+- name: Install Python/Node toolchains for MCP servers
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - python3-pip
+      - nodejs
+      - npm
+    state: present
+
+- name: Install mcp-proxy and the fetch MCP server into a dedicated venv
+  ansible.builtin.pip:
+    name:
+      - mcp-proxy
+      - mcp-server-fetch
+    virtualenv: "{{ mcp_venv_dir }}"
+    virtualenv_command: python3 -m venv
+  notify: restart mcp-fetch
+
+- name: Install the filesystem MCP server globally via npm
+  community.general.npm:
+    name: "@modelcontextprotocol/server-filesystem"
+    global: true
+    state: present
+  notify: restart mcp-filesystem
+
+- name: Find npm's global install prefix
+  ansible.builtin.command: npm prefix -g
+  register: npm_global_prefix
+  changed_when: false
+
+- name: Install mcp-fetch systemd unit
+  ansible.builtin.template:
+    src: mcp-fetch.service.j2
+    dest: /etc/systemd/system/mcp-fetch.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart mcp-fetch
+
+- name: Install mcp-filesystem systemd unit
+  ansible.builtin.template:
+    src: mcp-filesystem.service.j2
+    dest: /etc/systemd/system/mcp-filesystem.service
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    mcp_filesystem_bin: "{{ npm_global_prefix.stdout }}/bin/mcp-server-filesystem"
+  notify: restart mcp-filesystem
+
+- name: Ensure mcp-fetch is running and enabled
+  ansible.builtin.systemd:
+    name: mcp-fetch
+    daemon_reload: true
+    state: started
+    enabled: true
+
+- name: Ensure mcp-filesystem is running and enabled
+  ansible.builtin.systemd:
+    name: mcp-filesystem
+    daemon_reload: true
+    state: started
+    enabled: true

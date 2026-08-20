@@ -1,0 +1,15 @@
+# {{ ansible_managed }}
+[Unit]
+Description=MCP fetch server (SSE, via mcp-proxy)
+After=network.target squid.service
+Requires=squid.service
+
+[Service]
+DynamicUser=yes
+ProtectSystem=strict
+PrivateTmp=yes
+ExecStart={{ mcp_venv_dir }}/bin/mcp-proxy --host {{ agent_bridge_gateway }} --port {{ mcp_fetch_port }} -- {{ mcp_venv_dir }}/bin/mcp-server-fetch --proxy-url http://127.0.0.1:{{ squid_http_port }}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
