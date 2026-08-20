@@ -1,0 +1,22 @@
+# {{ ansible_managed }}
+# Written from scratch, not extended from Debian's default squid.conf.
+# Only HTTPS CONNECT tunnels to domains in allowed_domains_file are
+# permitted; everything else is denied.
+
+http_port {{ squid_http_port }}
+
+acl agentnet src {{ agent_bridge_subnet }}
+# The credential broker runs on the host itself (not on the agent bridge)
+# and also needs to reach the allowed domains through Squid - it is the
+# only other component with standing access, and only to the same allowlist.
+acl brokerhost src 127.0.0.1
+acl SSL_ports port 443
+acl CONNECT method CONNECT
+acl allowed_domains dstdomain "{{ allowed_domains_file }}"
+
+http_access deny CONNECT !SSL_ports
+http_access allow agentnet CONNECT allowed_domains
+http_access allow brokerhost CONNECT allowed_domains
+http_access deny all
+
+access_log {{ squid_access_log }}

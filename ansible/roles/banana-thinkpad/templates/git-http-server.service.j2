@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Git smart-HTTP server for per-run agent repos
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/git-http-server
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

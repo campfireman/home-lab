@@ -8,3 +8,25 @@
   ansible.builtin.systemd:
     name: containerd
     state: restarted
+
+- name: restart nftables
+  ansible.builtin.systemd:
+    name: nftables
+    state: restarted
+
+- name: restart squid
+  ansible.builtin.systemd:
+    name: squid
+    state: restarted
+
+- name: restart credential-broker
+  ansible.builtin.systemd:
+    name: credential-broker
+    daemon_reload: true
+    state: restarted
+
+- name: restart git-http-server
+  ansible.builtin.systemd:
+    name: git-http-server
+    daemon_reload: true
+    state: restarted

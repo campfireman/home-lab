@@ -1,0 +1,41 @@
+---
+- name: Install Go toolchain and git
+  ansible.builtin.apt:
+    name:
+      - golang-go
+      - git
+    state: present
+
+- name: Copy git-http-server source
+  ansible.builtin.copy:
+    src: git-http-server/
+    dest: "{{ agent_build_dir }}/git-http-server/"
+    owner: root
+    group: root
+    mode: "0644"
+  register: git_http_src
+
+- name: Build git-http-server binary
+  ansible.builtin.command:
+    cmd: go build -o /usr/local/bin/git-http-server .
+    chdir: "{{ agent_build_dir }}/git-http-server"
+  environment:
+    HOME: /root
+  when: git_http_src.changed
+  notify: restart git-http-server
+
+- name: Install git-http-server systemd unit
+  ansible.builtin.template:
+    src: git-http-server.service.j2
+    dest: /etc/systemd/system/git-http-server.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart git-http-server
+
+- name: Ensure git-http-server is running and enabled
+  ansible.builtin.systemd:
+    name: git-http-server
+    daemon_reload: true
+    state: started
+    enabled: true

@@ -1,0 +1,27 @@
+{
+  "cniVersion": "1.0.0",
+  "name": "{{ agent_bridge_name }}",
+  "plugins": [
+    {
+      "type": "bridge",
+      "bridge": "{{ agent_bridge_name }}",
+      "isGateway": true,
+      "ipMasq": false,
+      "hairpinMode": true,
+      "ipam": {
+        "type": "host-local",
+        "ranges": [
+          [
+            {
+              "subnet": "{{ agent_bridge_subnet }}",
+              "gateway": "{{ agent_bridge_gateway }}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "type": "tuning"
+    }
+  ]
+}

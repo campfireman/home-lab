@@ -42,10 +42,13 @@
     mode: "0755"
   loop: "{{ agent_host_dirs | reject('equalto', '/srv/agent/etc') | list }}"
 
-- name: Restrict /srv/agent/etc to root only
+- name: Restrict /srv/agent/etc to root-writable only
   ansible.builtin.file:
     path: /srv/agent/etc
     state: directory
     owner: root
     group: root
-    mode: "0700"
+    # 0755, not 0700: policy files here (e.g. Squid's allowed_domains.txt)
+    # must stay readable by the services that enforce them, such as Squid
+    # running as its own unprivileged user. Only root can ever write here.
+    mode: "0755"

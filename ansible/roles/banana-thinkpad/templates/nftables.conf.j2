@@ -1,0 +1,33 @@
+#!/usr/sbin/nft -f
+# {{ ansible_managed }}
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy accept;
+
+        # Only traffic sourced from the agent bridge is restricted here.
+        # Every other host service (SSH, etc.) keeps its normal access -
+        # these rules never touch the chain's default policy.
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ squid_http_port }} accept comment "squid egress gateway"
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ git_remote_port }} accept comment "per-run git remote"
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ credential_broker_port }} accept comment "credential broker"
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ mcp_port_range }} accept comment "MCP servers, opened per run"
+
+        # Default-drop for the agent network. This also drops port 53: the
+        # agent has no DNS, Squid resolves every host name for it, so a
+        # guest that cannot resolve names cannot use DNS as an exfiltration
+        # channel.
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} drop comment "agent default-drop"
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy accept;
+
+        # Agents are never routed anywhere - not to the rest of the LAN, not
+        # to the open internet. Every service an agent may reach lives on
+        # the host itself and is handled by the input chain above.
+        iifname "{{ agent_bridge_name }}" drop comment "agents may not be forwarded anywhere"
+    }
+}

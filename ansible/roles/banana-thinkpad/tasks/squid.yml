@@ -1,0 +1,48 @@
+---
+- name: Install Squid
+  ansible.builtin.apt:
+    name: squid
+    state: present
+
+- name: Check for an existing allowed_domains.txt
+  ansible.builtin.stat:
+    path: "{{ allowed_domains_file }}"
+  register: allowed_domains_stat
+
+# Seed once, then leave alone: operators add domains to this file by hand
+# after a run fails (see the spec), so re-running the playbook must never
+# overwrite entries an admin has since added.
+- name: Seed allowed_domains.txt with the Anthropic API endpoint
+  ansible.builtin.copy:
+    dest: "{{ allowed_domains_file }}"
+    content: |
+      api.anthropic.com
+    owner: root
+    group: root
+    mode: "0644"
+  when: not allowed_domains_stat.stat.exists
+
+- name: Install Squid configuration
+  ansible.builtin.template:
+    src: squid.conf.j2
+    dest: /etc/squid/squid.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart squid
+
+# Squid (Debian's default "proxy" user) needs to create and append to its
+# own access log; /srv/agent/log is otherwise root-owned.
+- name: Let Squid write its access log
+  ansible.builtin.file:
+    path: /srv/agent/log
+    state: directory
+    owner: proxy
+    group: proxy
+    mode: "0755"
+
+- name: Ensure Squid is running and enabled
+  ansible.builtin.systemd:
+    name: squid
+    state: started
+    enabled: true

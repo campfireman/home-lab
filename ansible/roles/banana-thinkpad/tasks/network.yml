@@ -1,0 +1,33 @@
+---
+- name: Install nftables
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+
+# CNI's bridge plugin creates and manages the agentbr0 interface itself the
+# first time a container/microVM attaches to it - no manual `ip link`/
+# ifupdown setup needed. ipMasq is deliberately false and no default route
+# is injected: agents reach the outside world only through Squid, never by
+# being routed.
+- name: Install agentbr0 CNI network definition
+  ansible.builtin.template:
+    src: agentbr0.conflist.j2
+    dest: /etc/cni/net.d/10-agentbr0.conflist
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install nftables policy
+  ansible.builtin.template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: restart nftables
+
+- name: Ensure nftables is running and enabled
+  ansible.builtin.systemd:
+    name: nftables
+    state: started
+    enabled: true
