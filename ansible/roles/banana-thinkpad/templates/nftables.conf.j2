@@ -4,6 +4,14 @@
 flush ruleset
 
 table inet filter {
+    # Starts empty. agentctl adds a port here only while a run that named
+    # that MCP server is active, and removes it again when the run ends -
+    # see step 47/50. A static always-open range would leave every MCP
+    # server reachable by any guest at any time, not just during a run.
+    set mcp_open_ports {
+        type inet_service
+    }
+
     chain input {
         type filter hook input priority 0; policy accept;
 
@@ -13,7 +21,7 @@ table inet filter {
         iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ squid_http_port }} accept comment "squid egress gateway"
         iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ git_remote_port }} accept comment "per-run git remote"
         iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ credential_broker_port }} accept comment "credential broker"
-        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport {{ mcp_port_range }} accept comment "MCP servers, opened per run"
+        iifname "{{ agent_bridge_name }}" ip saddr {{ agent_bridge_subnet }} tcp dport @mcp_open_ports accept comment "MCP servers, opened per run"
 
         # Default-drop for the agent network. This also drops port 53: the
         # agent has no DNS, Squid resolves every host name for it, so a

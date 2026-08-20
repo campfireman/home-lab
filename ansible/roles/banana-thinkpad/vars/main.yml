@@ -21,7 +21,6 @@ agent_bridge_gateway: "10.88.0.1"
 squid_http_port: 3128
 git_remote_port: 3000
 credential_broker_port: 8081
-mcp_port_range: "9100-9199"
 
 allowed_domains_file: /srv/agent/etc/allowed_domains.txt
 squid_access_log: /srv/agent/log/squid-access.log
@@ -36,6 +35,9 @@ mcp_venv_dir: /opt/agent-host/mcp/venv
 mcp_fetch_port: 9100
 mcp_filesystem_port: 9101
 mcp_filesystem_root: /srv/runs
+
+agentctl_config_file: /srv/agent/etc/agentctl-config.json
+git_mirror_dir: /srv/git
 
 anthropic_api_key: !vault |
   $ANSIBLE_VAULT;1.1;AES256

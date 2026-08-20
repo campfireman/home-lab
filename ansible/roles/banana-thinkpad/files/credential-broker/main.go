@@ -44,7 +44,12 @@ func main() {
 	}
 
 	client := &http.Client{
-		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)},
+		// DisableKeepAlives: without it, requests reuse an already-open
+		// Squid CONNECT tunnel and Squid only logs the tunnel's
+		// establishment, not each request multiplexed through it - which
+		// breaks the "one line per request" audit trail the proxy log is
+		// there for, and undercounts agentctl's run summaries.
+		Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL), DisableKeepAlives: true},
 		Timeout:   60 * time.Second,
 	}
 

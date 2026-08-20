@@ -1,0 +1,30 @@
+---
+- name: Install Go toolchain
+  ansible.builtin.apt:
+    name: golang-go
+    state: present
+
+- name: Copy agentctl source
+  ansible.builtin.copy:
+    src: agentctl/
+    dest: "{{ agent_build_dir }}/agentctl/"
+    owner: root
+    group: root
+    mode: "0644"
+  register: agentctl_src
+
+- name: Build agentctl binary
+  ansible.builtin.command:
+    cmd: go build -o /usr/local/bin/agentctl .
+    chdir: "{{ agent_build_dir }}/agentctl"
+  environment:
+    HOME: /root
+  when: agentctl_src.changed
+
+- name: Install agentctl config
+  ansible.builtin.template:
+    src: agentctl-config.json.j2
+    dest: "{{ agentctl_config_file }}"
+    owner: root
+    group: root
+    mode: "0644"
