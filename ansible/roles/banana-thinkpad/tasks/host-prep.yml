@@ -1,0 +1,51 @@
+---
+- name: Check hardware virtualization support
+  ansible.builtin.command: grep -c -E 'svm|vmx' /proc/cpuinfo
+  register: virt_support
+  changed_when: false
+  failed_when: virt_support.stdout | int == 0
+
+- name: Check /dev/kvm exists
+  ansible.builtin.stat:
+    path: /dev/kvm
+  register: kvm_device
+
+- name: Assert /dev/kvm is present
+  ansible.builtin.assert:
+    that: kvm_device.stat.exists
+    fail_msg: "/dev/kvm does not exist - KVM is not available on this host"
+
+- name: Ignore lid switch (systemd-logind)
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/logind.conf
+    regexp: "^#?{{ item }}="
+    line: "{{ item }}=ignore"
+    insertafter: "^\\[Login\\]"
+  loop:
+    - HandleLidSwitch
+    - HandleLidSwitchExternalPower
+  notify: restart systemd-logind
+
+- name: Mask sleep/suspend/hibernate targets
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    masked: true
+  loop:
+    - sleep.target
+    - suspend.target
+    - hibernate.target
+
+- name: Create agent host directory tree
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ agent_host_dirs | reject('equalto', '/srv/agent/etc') | list }}"
+
+- name: Restrict /srv/agent/etc to root only
+  ansible.builtin.file:
+    path: /srv/agent/etc
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"

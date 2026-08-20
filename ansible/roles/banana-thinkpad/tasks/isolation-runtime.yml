@@ -1,0 +1,77 @@
+---
+- name: Install containerd, CNI plugins, and extraction tools
+  ansible.builtin.apt:
+    name:
+      - containerd
+      - containernetworking-plugins
+      - zstd
+      - curl
+    state: present
+    update_cache: true
+
+- name: Create /opt/cni directory
+  ansible.builtin.file:
+    path: /opt/cni
+    state: directory
+    mode: "0755"
+
+- name: Link CNI plugin directory to nerdctl's default CNI_PATH
+  ansible.builtin.file:
+    src: /usr/lib/cni
+    dest: /opt/cni/bin
+    state: link
+    force: true
+
+- name: Download kata-static release tarball
+  ansible.builtin.get_url:
+    url: "{{ kata_static_url }}"
+    dest: "/tmp/{{ kata_static_asset }}"
+    mode: "0644"
+
+- name: Extract kata-static tarball to /
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ kata_static_asset }}"
+    dest: /
+    remote_src: true
+    creates: /opt/kata/bin/containerd-shim-kata-v2
+
+# containerd-shim-kata-v2 only accepts a KATA_CONF_FILE path that resolves
+# to its build-time "shipped" default config (share/defaults/.../configuration.toml,
+# a symlink shipped pointing at configuration-qemu.toml). This host only ever
+# runs Cloud Hypervisor microVMs, so repoint that symlink at the CLH config -
+# this makes it the accepted "shipped" default and lets the containerd-shim-kata-clh-v2
+# wrapper's KATA_CONF_FILE override pass the shim's own path check.
+- name: Make Cloud Hypervisor the shipped default Kata config
+  ansible.builtin.file:
+    src: configuration-clh.toml
+    dest: /opt/kata/share/defaults/kata-containers/configuration.toml
+    state: link
+    force: true
+
+- name: Download nerdctl release tarball
+  ansible.builtin.get_url:
+    url: "{{ nerdctl_url }}"
+    dest: "/tmp/{{ nerdctl_asset }}"
+    mode: "0644"
+
+- name: Extract nerdctl to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ nerdctl_asset }}"
+    dest: /usr/local/bin
+    remote_src: true
+    creates: /usr/local/bin/nerdctl
+
+- name: Install containerd-shim-kata-clh-v2 wrapper
+  ansible.builtin.template:
+    src: containerd-shim-kata-clh-v2.j2
+    dest: /usr/local/bin/containerd-shim-kata-clh-v2
+    owner: root
+    group: root
+    mode: "0755"
+  notify: restart containerd
+
+- name: Ensure containerd is running and enabled
+  ansible.builtin.systemd:
+    name: containerd
+    state: started
+    enabled: true

@@ -1,0 +1,15 @@
+---
+kata_version: "4.0.0"
+kata_static_asset: "kata-static-{{ kata_version }}-amd64.tar.zst"
+kata_static_url: "https://github.com/kata-containers/kata-containers/releases/download/{{ kata_version }}/{{ kata_static_asset }}"
+kata_conf_file: "/opt/kata/share/defaults/kata-containers/configuration-clh.toml"
+
+nerdctl_version: "2.3.5"
+nerdctl_asset: "nerdctl-{{ nerdctl_version }}-linux-amd64.tar.gz"
+nerdctl_url: "https://github.com/containerd/nerdctl/releases/download/v{{ nerdctl_version }}/{{ nerdctl_asset }}"
+
+agent_host_dirs:
+  - /srv/runs
+  - /srv/git
+  - /srv/agent/etc
+  - /srv/agent/log

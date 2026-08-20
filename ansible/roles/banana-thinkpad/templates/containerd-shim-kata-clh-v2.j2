@@ -1,0 +1,4 @@
+#!/bin/sh
+# {{ ansible_managed }}
+KATA_CONF_FILE={{ kata_conf_file }} \
+  exec /opt/kata/bin/containerd-shim-kata-v2 "$@"
