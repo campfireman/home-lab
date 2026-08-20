@@ -1,0 +1,55 @@
+---
+- name: Check for an existing prepull-images.txt
+  ansible.builtin.stat:
+    path: /srv/agent/etc/prepull-images.txt
+  register: prepull_list_stat
+
+# Seed once, then leave alone - the owner adds real image names to this
+# list over time, same as allowed_domains.txt.
+- name: Seed prepull-images.txt
+  ansible.builtin.copy:
+    src: prepull-images.txt
+    dest: /srv/agent/etc/prepull-images.txt
+    owner: root
+    group: root
+    mode: "0644"
+  when: not prepull_list_stat.stat.exists
+
+- name: Install prepull-agent-images.sh
+  ansible.builtin.copy:
+    src: prepull-agent-images.sh
+    dest: /usr/local/bin/prepull-agent-images.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install prepull-agent-images systemd service
+  ansible.builtin.template:
+    src: prepull-agent-images.service.j2
+    dest: /etc/systemd/system/prepull-agent-images.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install prepull-agent-images systemd timer
+  ansible.builtin.template:
+    src: prepull-agent-images.timer.j2
+    dest: /etc/systemd/system/prepull-agent-images.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable prepull-agent-images timer
+  ansible.builtin.systemd:
+    name: prepull-agent-images.timer
+    daemon_reload: true
+    state: started
+    enabled: true
+
+# Image pull, not microVM boot, is the real startup cost - run it once at
+# the end of every deploy too, not just on the daily timer. nerdctl pull is
+# itself idempotent, so this is a no-op once images are already cached.
+- name: Pre-pull agent images now
+  ansible.builtin.systemd:
+    name: prepull-agent-images.service
+    state: started

@@ -25,6 +25,13 @@
     group: nogroup
     state: directory
 
+- name: Setup NFS Agent Host Log Directory
+  ansible.builtin.file:
+    path: "{{ zimaboard_nfs_agent_log_directory }}"
+    owner: nobody
+    group: nogroup
+    state: directory
+
 - name: Setup NFS YouTube Music Directory
   ansible.builtin.file:
     path: "{{ zimaboard_nfs_media_directory }}/youtube/music"

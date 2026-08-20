@@ -1,0 +1,65 @@
+---
+- name: Install NFS client and rsync
+  ansible.builtin.apt:
+    name:
+      - nfs-common
+      - rsync
+    state: present
+
+- name: Create log backup mount point
+  ansible.builtin.file:
+    path: "{{ agent_log_backup_mount }}"
+    state: directory
+    mode: "0755"
+
+- name: Mount zimaboard's agent log export
+  ansible.posix.mount:
+    src: "{{ zimaboard_host }}:{{ zimaboard_agent_log_export }}"
+    path: "{{ agent_log_backup_mount }}"
+    fstype: nfs
+    state: mounted
+  register: agent_log_mount
+  # The fstab entry is written either way, so the mount completes on its
+  # own once zimaboard's export exists (or the next `make
+  # deploy-banana-thinkpad` retries it) - a missing export on zimaboard's
+  # side shouldn't block the rest of this deploy.
+  ignore_errors: true
+
+- name: Warn if the agent log backup mount failed
+  ansible.builtin.debug:
+    msg: >-
+      Could not mount {{ zimaboard_host }}:{{ zimaboard_agent_log_export }} -
+      run `make deploy-zimaboard` to create the export, then re-run
+      `make deploy-banana-thinkpad`.
+  when: agent_log_mount is failed
+
+- name: Install ship-agent-logs.sh
+  ansible.builtin.copy:
+    src: ship-agent-logs.sh
+    dest: /usr/local/bin/ship-agent-logs.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install ship-agent-logs systemd service
+  ansible.builtin.template:
+    src: ship-agent-logs.service.j2
+    dest: /etc/systemd/system/ship-agent-logs.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install ship-agent-logs systemd timer
+  ansible.builtin.template:
+    src: ship-agent-logs.timer.j2
+    dest: /etc/systemd/system/ship-agent-logs.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable ship-agent-logs timer
+  ansible.builtin.systemd:
+    name: ship-agent-logs.timer
+    daemon_reload: true
+    state: started
+    enabled: true

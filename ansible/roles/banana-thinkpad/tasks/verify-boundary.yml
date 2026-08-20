@@ -1,0 +1,16 @@
+---
+- name: Copy verify-boundary guest script
+  ansible.builtin.copy:
+    src: verify-boundary/
+    dest: "{{ agent_build_dir }}/verify-boundary/"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install verify-agent-boundary wrapper
+  ansible.builtin.template:
+    src: verify-agent-boundary.sh.j2
+    dest: /usr/local/bin/verify-agent-boundary
+    owner: root
+    group: root
+    mode: "0755"

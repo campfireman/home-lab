@@ -12,6 +12,37 @@ func (r *Run) containerName() string {
 	return "agent-" + r.ID
 }
 
+// countActiveRuns counts running containers named agent-* - agentctl is a
+// sequence of steps, not a daemon, so this is the only shared state across
+// independent invocations that a concurrency cap can check against.
+func countActiveRuns() (int, error) {
+	out, err := exec.Command("nerdctl", "ps", "--format", "{{.Names}}").Output()
+	if err != nil {
+		return 0, fmt.Errorf("list running containers: %w", err)
+	}
+	n := 0
+	for _, name := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if strings.HasPrefix(name, "agent-") {
+			n++
+		}
+	}
+	return n, nil
+}
+
+func checkConcurrencyLimit(cfg *Config) error {
+	if cfg.MaxConcurrentRuns <= 0 {
+		return nil
+	}
+	active, err := countActiveRuns()
+	if err != nil {
+		return err
+	}
+	if active >= cfg.MaxConcurrentRuns {
+		return fmt.Errorf("refusing to start: %d runs already active (max %d)", active, cfg.MaxConcurrentRuns)
+	}
+	return nil
+}
+
 func (r *Run) nerdctlArgs(token string) []string {
 	return []string{
 		"run", "-d",

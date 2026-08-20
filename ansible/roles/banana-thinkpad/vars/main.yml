@@ -37,7 +37,20 @@ mcp_filesystem_port: 9101
 mcp_filesystem_root: /srv/runs
 
 agentctl_config_file: /srv/agent/etc/agentctl-config.json
+agentctl_runs_dir: /srv/runs
 git_mirror_dir: /srv/git
+
+# banana-thinkpad has 30G RAM. The spec's own guidance is ~4G/run leaving
+# headroom on 16G (3-4 runs); scaled to this host's actual RAM with room
+# left for host services (Squid, broker, MCP servers).
+agentctl_max_concurrent_runs: 6
+
+# Matches zimaboard_nfs_agent_log_directory in ansible/roles/zimaboard -
+# roles here don't share vars, so this is duplicated deliberately, the same
+# way common-infra duplicates zimaboard's smartctl_exporter vars.
+zimaboard_host: "192.168.1.67"
+zimaboard_agent_log_export: "/var/nfs/backups/agent-host"
+agent_log_backup_mount: /mnt/agent-log-backup
 
 anthropic_api_key: !vault |
   $ANSIBLE_VAULT;1.1;AES256

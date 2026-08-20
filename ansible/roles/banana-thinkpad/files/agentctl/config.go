@@ -22,6 +22,7 @@ type Config struct {
 	BrokerTokensDir    string         `json:"broker_tokens_dir"`
 	AllowedDomainsFile string         `json:"allowed_domains_file"`
 	SquidAccessLog     string         `json:"squid_access_log"`
+	MaxConcurrentRuns  int            `json:"max_concurrent_runs"`
 }
 
 const configPath = "/srv/agent/etc/agentctl-config.json"

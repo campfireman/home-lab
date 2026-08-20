@@ -21,6 +21,7 @@ func main() {
 	spec, err := loadSpec(os.Args[1])
 	fatalIf(err)
 	fatalIf(spec.validate(cfg))
+	fatalIf(checkConcurrencyLimit(cfg))
 
 	run := newRun(generateRunID(), spec, cfg)
 	log.Printf("run %s: starting %q", run.ID, spec.Name)

@@ -1,0 +1,152 @@
+#!/bin/sh
+# {{ ansible_managed }}
+# Runs every check from "Phase 10 - Verify the boundary": boots a real
+# microVM through a real agentctl run and checks each of steps 53-61 fails
+# (or succeeds) the way the design intends. Run this after any change to
+# the isolation runtime, network policy, credential broker, or git remote,
+# before trusting the host with real work:
+#
+#   sudo verify-agent-boundary
+set -e
+
+IMAGE=verify-agent-boundary:latest
+PROJECT=boundary-verify
+SEED=/tmp/verify-boundary-seed
+WORK=/tmp/verify-boundary-work
+SPEC=/tmp/verify-boundary-task.yaml
+PROMPT=/tmp/verify-boundary-prompt.md
+RUN_LOG=/tmp/verify-boundary-run.log
+
+FAILED=0
+note() { echo "$1"; }
+fail_note() { echo "$1"; FAILED=1; }
+
+cleanup() {
+  rm -rf "$SEED" "$WORK" "$SPEC" "$PROMPT"
+  rm -rf "{{ git_mirror_dir }}/$PROJECT.git"
+  [ -n "${RUN_ID:-}" ] && rm -rf "{{ agentctl_runs_dir }}/$RUN_ID"
+}
+trap cleanup EXIT
+
+if ! nerdctl images | grep -q "^verify-agent-boundary "; then
+  note "building verification image (first run only)"
+  nerdctl rm -f verify-agent-boundary-build >/dev/null 2>&1 || true
+  nerdctl run -d --name verify-agent-boundary-build alpine:3.20 \
+    sh -c 'apk add --no-cache curl git >/dev/null 2>&1 && sleep 300' >/dev/null
+  sleep 8
+  nerdctl cp {{ agent_build_dir }}/verify-boundary/run-agent verify-agent-boundary-build:/usr/local/bin/run-agent
+  nerdctl exec verify-agent-boundary-build chmod +x /usr/local/bin/run-agent
+  nerdctl commit verify-agent-boundary-build "$IMAGE" >/dev/null
+  nerdctl stop verify-agent-boundary-build >/dev/null
+  nerdctl rm verify-agent-boundary-build >/dev/null
+fi
+
+rm -rf "$SEED" "{{ git_mirror_dir }}/$PROJECT.git"
+git init --bare -q "$SEED"
+rm -rf "$WORK" && mkdir -p "$WORK" && cd "$WORK"
+git init -q -b main
+git config user.email verify@banana-thinkpad
+git config user.name verify
+echo "boundary verification project" > README.md
+git add README.md
+git commit -q -m seed
+git push -q "$SEED" main
+git clone -q --mirror "$SEED" "{{ git_mirror_dir }}/$PROJECT.git"
+
+echo "verify the sandbox boundary" > "$PROMPT"
+
+cat > "$SPEC" <<SPEC
+name: verify-boundary
+image: $IMAGE
+
+context:
+  repo: $PROJECT
+  base: main
+  prompt: $PROMPT
+
+network:
+  allow: []
+
+mcp: []
+
+limits:
+  cpus: 1
+  memory: 512M
+  wall_clock: 2m
+SPEC
+
+note "running agentctl..."
+agentctl "$SPEC" > "$RUN_LOG" 2>&1 || true
+cat "$RUN_LOG"
+
+RUN_ID=$(grep -oE 'run [0-9]+-[0-9a-f]+' "$RUN_LOG" | head -1 | cut -d' ' -f2)
+if [ -z "$RUN_ID" ]; then
+  fail_note "FAIL: could not determine run id - agentctl did not start"
+  exit 1
+fi
+
+RUN_DIR="{{ agentctl_runs_dir }}/$RUN_ID"
+VERIFY_OUT="$RUN_DIR/out/verify.txt"
+
+if [ ! -f "$VERIFY_OUT" ]; then
+  fail_note "FAIL: 60_file_survives_microvm - $VERIFY_OUT does not exist"
+else
+  note "PASS: 60_file_survives_microvm"
+fi
+
+echo
+echo "--- guest-reported checks ---"
+if [ -f "$VERIFY_OUT" ]; then
+  while IFS=': ' read -r key val; do
+    case "$key" in
+      53_kernel)
+        HOST_KERNEL=$(uname -r)
+        if [ "$val" != "$HOST_KERNEL" ]; then
+          note "PASS: 53_kernel (guest=$val host=$HOST_KERNEL)"
+        else
+          fail_note "FAIL: 53_kernel matches host ($val)"
+        fi
+        ;;
+      57_visible_api_key)
+        REAL_KEY=$(cat {{ anthropic_api_key_file }})
+        if [ -n "$val" ] && [ "$val" != "$REAL_KEY" ]; then
+          note "PASS: 57_token_not_real_key"
+        else
+          fail_note "FAIL: 57_token_not_real_key (empty or matches real key)"
+        fi
+        ;;
+      PASS)
+        ;;
+      *)
+        case "$val" in
+          PASS) note "PASS: $key" ;;
+          FAIL) fail_note "FAIL: $key" ;;
+        esac
+        ;;
+    esac
+  done < "$VERIFY_OUT"
+fi
+
+echo
+echo "--- proxy log ---"
+SUMMARY="$RUN_DIR/summary.json"
+if [ -f "$SUMMARY" ]; then
+  ALLOWED=$(grep -o '"proxy_requests_allowed": [0-9]*' "$SUMMARY" | grep -o '[0-9]*$')
+  DENIED=$(grep -o '"proxy_requests_denied": [0-9]*' "$SUMMARY" | grep -o '[0-9]*$')
+  if [ "${ALLOWED:-0}" -ge 1 ] && [ "${DENIED:-0}" -ge 1 ]; then
+    note "PASS: 61_proxy_log_has_allowed_and_denied (allowed=$ALLOWED denied=$DENIED)"
+  else
+    fail_note "FAIL: 61_proxy_log_has_allowed_and_denied (allowed=$ALLOWED denied=$DENIED)"
+  fi
+else
+  fail_note "FAIL: 61_proxy_log_has_allowed_and_denied - no summary.json"
+fi
+
+echo
+if [ "$FAILED" -eq 0 ]; then
+  echo "ALL CHECKS PASSED"
+  exit 0
+else
+  echo "ONE OR MORE CHECKS FAILED - do not trust this host with real work yet"
+  exit 1
+fi

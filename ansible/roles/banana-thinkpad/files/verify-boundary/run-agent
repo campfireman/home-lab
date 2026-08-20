@@ -1,0 +1,65 @@
+#!/bin/sh
+# Runs inside the microVM as the boundary verification "agent". Reports
+# what it can self-observe (spec steps 53-59) to /out/verify.txt; the host
+# wrapper checks the rest (57's key comparison, 60, 61) against state only
+# the host can see.
+OUT=/out/verify.txt
+: > "$OUT"
+report() { echo "$1: $2" >> "$OUT"; }
+
+uname -r > /out/guest-kernel.txt
+report "53_kernel" "$(cat /out/guest-kernel.txt)"
+
+if curl -sS -o /dev/null --max-time 10 https://api.anthropic.com/; then
+  report "54_allowed_domain_reachable" PASS
+else
+  report "54_allowed_domain_reachable" FAIL
+fi
+
+if curl -sS -o /dev/null --max-time 8 https://example.com/; then
+  report "54_denied_domain_blocked" FAIL
+else
+  report "54_denied_domain_blocked" PASS
+fi
+
+if getent hosts github.com >/dev/null 2>&1; then
+  report "55_no_dns" FAIL
+else
+  report "55_no_dns" PASS
+fi
+
+if curl -sS -o /dev/null --max-time 5 http://192.168.1.1/; then
+  report "56_rfc1918_blocked" FAIL
+else
+  report "56_rfc1918_blocked" PASS
+fi
+
+# Safe to report: this is the low-privilege per-run token, never the real
+# key. The host wrapper confirms it differs from the real key on disk.
+report "57_visible_api_key" "$ANTHROPIC_API_KEY"
+
+cd /workspace
+git config user.email verify@banana-thinkpad
+git config user.name verify
+
+# A no-op push (HEAD already equal to the target ref) never even reaches
+# the hook - git reports "up to date" without touching receive-pack at
+# all. Make a real commit first so both push attempts are genuine writes.
+echo "boundary check $(date +%s)" >> VERIFY_MARKER
+git add VERIFY_MARKER
+git commit -q -m "verify: boundary check"
+
+if git push origin HEAD:refs/heads/main >/tmp/push-main.log 2>&1; then
+  report "58_hook_blocks_main" FAIL
+else
+  report "58_hook_blocks_main" PASS
+fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if git push origin HEAD:refs/heads/"$BRANCH" >/tmp/push-agent.log 2>&1; then
+  report "59_hook_allows_own_branch" PASS
+else
+  report "59_hook_allows_own_branch" FAIL
+fi
+
+echo done

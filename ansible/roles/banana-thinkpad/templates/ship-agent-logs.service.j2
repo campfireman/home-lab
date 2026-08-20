@@ -1,0 +1,8 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Ship agent host logs to zimaboard
+RequiresMountsFor={{ agent_log_backup_mount }}
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ship-agent-logs.sh

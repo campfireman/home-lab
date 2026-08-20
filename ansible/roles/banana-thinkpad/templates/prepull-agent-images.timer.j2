@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Daily agent image pre-pull
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

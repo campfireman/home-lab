@@ -20,3 +20,7 @@ http_access allow brokerhost CONNECT allowed_domains
 http_access deny all
 
 access_log {{ squid_access_log }}
+# Without this, a request logged right before agentctl reads the log to
+# build a run's summary can still be sitting in Squid's write buffer and
+# not yet on disk - an intermittent undercount, not a logic bug.
+buffered_logs off

@@ -8,9 +8,10 @@
     "fetch": {{ mcp_fetch_port }},
     "filesystem": {{ mcp_filesystem_port }}
   },
-  "runs_dir": "/srv/runs",
+  "runs_dir": "{{ agentctl_runs_dir }}",
   "git_mirror_dir": "{{ git_mirror_dir }}",
   "broker_tokens_dir": "{{ broker_tokens_dir }}",
   "allowed_domains_file": "{{ allowed_domains_file }}",
-  "squid_access_log": "{{ squid_access_log }}"
+  "squid_access_log": "{{ squid_access_log }}",
+  "max_concurrent_runs": {{ agentctl_max_concurrent_runs }}
 }

@@ -8,3 +8,6 @@
 - include_tasks: mcp-servers.yml
 - include_tasks: task-spec.yml
 - include_tasks: agentctl.yml
+- include_tasks: prepull-images.yml
+- include_tasks: log-shipping.yml
+- include_tasks: verify-boundary.yml

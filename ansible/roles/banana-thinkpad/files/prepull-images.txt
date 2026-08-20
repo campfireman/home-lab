@@ -1,0 +1,5 @@
+# One agent image per line. Pre-pulled daily and after every deploy.
+# Image pull, not microVM boot, is the real startup cost - keep this list
+# updated with whatever images real task specs actually use.
+#
+# ghcr.io/you/agent-python:2026-08

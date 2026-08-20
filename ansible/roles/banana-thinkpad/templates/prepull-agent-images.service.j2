@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Pre-pull agent images
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/prepull-agent-images.sh
