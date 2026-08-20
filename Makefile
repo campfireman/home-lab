@@ -6,11 +6,11 @@ ANSIBLE_DIR=./ansible
 INVENTORY_PATH=$(ANSIBLE_DIR)/inventory/home-lab/hosts.ini
 
 define playbook
-	ansible-playbook "$(ANSIBLE_DIR)/$(1)" --vault-password-file=${VAULT_PASSWORD_PATH} -i ${INVENTORY_PATH} -K $(2)
+	ansible-playbook "$(ANSIBLE_DIR)/$(1)" --vault-password-file=${VAULT_PASSWORD_PATH} -i ${INVENTORY_PATH} $(2)
 endef
 
 define playbook_with_tag
-	$(call playbook,site.yml, -t $(1))
+	$(call playbook,site.yml, -t $(1) --limit $(1))
 endef
 
 build-setup-builder:
@@ -41,6 +41,9 @@ deploy-master-infra: install-requirements
 
 deploy-zimaboard: install-requirements
 	$(call playbook_with_tag,zimaboard)
+
+deploy-banana-thinkpad: install-requirements
+	$(call playbook_with_tag,banana-thinkpad)
 
 deploy-picam: install-requirements
 	$(call playbook_with_tag,picam)

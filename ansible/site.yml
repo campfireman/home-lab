@@ -51,6 +51,14 @@
 #   tags:
 #     - picam
 
+- name: "Setup specifics on banana-thinkpad"
+  hosts: banana-thinkpad
+  become: yes
+  roles:
+    - role: banana-thinkpad
+  tags:
+    - banana-thinkpad
+
 - name: Tailscale
   hosts:
     - zimaboard
