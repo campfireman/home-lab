@@ -22,7 +22,7 @@ terraform {
     }
     grafana = {
       source  = "grafana/grafana"
-      version = "4.45.1"
+      version = "4.45.2"
     }
   }
 }
