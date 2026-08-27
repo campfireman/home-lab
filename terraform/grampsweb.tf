@@ -133,7 +133,7 @@ resource "kubernetes_deployment_v1" "grampsweb" {
         # --- Container 1: Web App ---
         container {
           name              = "grampsweb"
-          image             = "ghcr.io/gramps-project/grampsweb:26.7.1"
+          image             = "ghcr.io/gramps-project/grampsweb:26.8.1"
           image_pull_policy = "IfNotPresent"
 
           env {
@@ -236,7 +236,7 @@ resource "kubernetes_deployment_v1" "grampsweb" {
         # --- Container 2: Celery Worker ---
         container {
           name              = "grampsweb-celery"
-          image             = "ghcr.io/gramps-project/grampsweb:26.7.1"
+          image             = "ghcr.io/gramps-project/grampsweb:26.8.1"
           image_pull_policy = "IfNotPresent"
           command           = ["celery", "-A", "gramps_webapi.celery", "worker", "--loglevel=INFO", "--concurrency=2"]
 
@@ -387,7 +387,7 @@ resource "kubernetes_cron_job_v1" "grampsweb_backup" {
 
             container {
               name  = "${local.grampsweb_name}-backup"
-              image = "ghcr.io/gramps-project/grampsweb:26.7.1"
+              image = "ghcr.io/gramps-project/grampsweb:26.8.1"
 
               command = [
                 "/bin/sh",
