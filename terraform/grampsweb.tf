@@ -82,7 +82,7 @@ resource "kubernetes_deployment_v1" "grampsweb_redis" {
       spec {
         container {
           name              = "redis"
-          image             = "docker.io/valkey/valkey:9.1.1-alpine"
+          image             = "docker.io/valkey/valkey:9.1.2-alpine"
           image_pull_policy = "IfNotPresent"
 
           port {
