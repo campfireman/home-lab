@@ -31,7 +31,9 @@
 # root, where Ansible would not otherwise find that file (it only
 # auto-loads ./ansible.cfg relative to the current directory) - without it,
 # host_key_checking stays at its strict default and every run fails on an
-# unknown host key.
+# unknown host key. `sops --extract` drops the private key's trailing
+# newline, which OpenSSH's key parser requires, so before_script appends
+# one back before ssh-agent/ssh ever tries to load the file.
 
 stages:
   - apply
@@ -86,6 +88,7 @@ ansible-deploy:
     - chmod +x /usr/local/bin/sops
     - mkdir -p ~/.ssh
     - sops -d --extract '["ansible_ssh_private_key"]' terraform/secrets.enc.json > "$ANSIBLE_PRIVATE_KEY_FILE"
+    - echo >> "$ANSIBLE_PRIVATE_KEY_FILE"
     - chmod 600 "$ANSIBLE_PRIVATE_KEY_FILE"
     - sops -d --extract '["ansible_vault_password"]' terraform/secrets.enc.json > ~/.ansible-vault-password
   script:
