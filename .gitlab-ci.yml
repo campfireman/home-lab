@@ -26,7 +26,12 @@
 # authorized_keys by hand, a one-time manual bootstrap. The private key and
 # the ansible-vault password live in terraform/secrets.enc.json alongside
 # the other CI secrets (keys "ansible_ssh_private_key" and
-# "ansible_vault_password").
+# "ansible_vault_password"). ANSIBLE_CONFIG points at ansible/ansible.cfg
+# explicitly because `make deploy` runs ansible-playbook from the repo
+# root, where Ansible would not otherwise find that file (it only
+# auto-loads ./ansible.cfg relative to the current directory) - without it,
+# host_key_checking stays at its strict default and every run fails on an
+# unknown host key.
 
 stages:
   - apply
@@ -74,6 +79,7 @@ ansible-deploy:
   variables:
     SOPS_VERSION: "3.13.3"
     ANSIBLE_PRIVATE_KEY_FILE: /root/.ssh/id_ansible_ci
+    ANSIBLE_CONFIG: ansible/ansible.cfg
   before_script:
     - apt-get update -qq && apt-get install -y -qq --no-install-recommends bash make curl git ansible openssh-client ca-certificates >/dev/null
     - curl -sL -o /usr/local/bin/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
