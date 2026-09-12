@@ -2,4 +2,3 @@ collections:
   - name: ansible.posix
   - name: community.docker
   - name: community.general
-  - name: artis3n.tailscale

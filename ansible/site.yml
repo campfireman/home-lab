@@ -59,19 +59,6 @@
   tags:
     - banana-thinkpad
 
-- name: Tailscale
-  hosts:
-    - zimaboard
-    - master
-  roles:
-    - role: artis3n.tailscale.machine
-      vars:
-        tailscale_authkey: "{{ tailscale_auth_key }}"
-        verbose: true
-        tailscale_args: --advertise-routes=192.168.1.0/24
-  tags:
-    - tailscale
-
 - name: Common Infrastructure
   hosts: all
   become: yes

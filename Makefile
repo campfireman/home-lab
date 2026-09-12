@@ -48,9 +48,6 @@ deploy-banana-thinkpad: install-requirements
 deploy-picam: install-requirements
 	$(call playbook_with_tag,picam)
 
-deploy-tailscale: install-requirements
-	$(call playbook_with_tag,tailscale)
-
 deploy-rclone: install-requirements
 	$(call playbook_with_tag,rclone)
 
