@@ -11,7 +11,7 @@ docker_network_name: "main_network"
 ha_version: "2026.9.2"
 ha_port: 8123
 
-music_assistant_version: "2.9.4"
+music_assistant_version: "2.10.3"
 
 pihole_version: "2026.07.2"
 pihole_port: 8080
