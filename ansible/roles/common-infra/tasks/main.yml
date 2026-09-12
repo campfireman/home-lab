@@ -1,4 +1,8 @@
 ---
-# - include_tasks: docker.yaml
+# banana-thinkpad has no Docker daemon by design (it runs containerd/kata
+# for sandboxed agent workloads instead), so the Docker-based exporters
+# below don't apply there.
 - include_tasks: smartctl-exporter.yml
+  when: inventory_hostname not in groups['banana-thinkpad']
 - include_tasks: node-exporter.yml
+  when: inventory_hostname not in groups['banana-thinkpad']
