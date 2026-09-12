@@ -17,6 +17,16 @@
 # terraform init's GCS backend auth happens before any terraform provider
 # runs, so GOOGLE_APPLICATION_CREDENTIALS has to be materialized by hand in
 # before_script, ahead of `make terraform-apply`.
+#
+# ansible-deploy runs `make deploy` the same way, on every push to master
+# that touches ansible/ (so Renovate's Ansible bumps roll out automatically)
+# and on the daily schedule (so host-level drift self-heals too). It
+# authenticates to zimaboard/elmaestro as the home-lab SSH user with a
+# dedicated CI keypair whose public half was added to each host's
+# authorized_keys by hand, a one-time manual bootstrap. The private key and
+# the ansible-vault password live in terraform/secrets.enc.json alongside
+# the other CI secrets (keys "ansible_ssh_private_key" and
+# "ansible_vault_password").
 
 stages:
   - apply
@@ -48,3 +58,29 @@ terraform-apply:
   script:
     - export PATH="$HOME/.tfenv/bin:$PATH"
     - make terraform-apply
+
+ansible-deploy:
+  stage: apply
+  image: debian:bookworm-slim
+  tags:
+    - home-lab
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - ansible/**/*
+        - Makefile
+        - .gitlab-ci.yml
+  variables:
+    SOPS_VERSION: "3.13.3"
+    ANSIBLE_PRIVATE_KEY_FILE: /root/.ssh/id_ansible_ci
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends bash make curl git ansible openssh-client ca-certificates >/dev/null
+    - curl -sL -o /usr/local/bin/sops "https://github.com/getsops/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux.amd64"
+    - chmod +x /usr/local/bin/sops
+    - mkdir -p ~/.ssh
+    - sops -d --extract '["ansible_ssh_private_key"]' terraform/secrets.enc.json > "$ANSIBLE_PRIVATE_KEY_FILE"
+    - chmod 600 "$ANSIBLE_PRIVATE_KEY_FILE"
+    - sops -d --extract '["ansible_vault_password"]' terraform/secrets.enc.json > ~/.ansible-vault-password
+  script:
+    - make deploy
