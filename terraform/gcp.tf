@@ -28,3 +28,32 @@ resource "google_storage_bucket_iam_member" "viewer" {
   member = "allUsers" # Public access for a static website
 }
 
+resource "google_storage_bucket" "presentations_website_bucket" {
+  name          = "presentations.ture.dev"
+  location      = "europe-west1"
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+
+  website {
+    main_page_suffix = "index.html"
+    not_found_page   = "404.html"
+  }
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 365
+    }
+  }
+
+  force_destroy = true
+}
+
+resource "google_storage_bucket_iam_member" "presentations_viewer" {
+  bucket = google_storage_bucket.presentations_website_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers" # Public access for a static website
+}
