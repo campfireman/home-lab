@@ -96,7 +96,7 @@ resource "kubernetes_deployment_v1" "pgadmin" {
 
         container {
           name              = "pgadmin"
-          image             = "dpage/pgadmin4:9.15.0"
+          image             = "dpage/pgadmin4:9.18.0"
           image_pull_policy = "IfNotPresent"
 
           env {
