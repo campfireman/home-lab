@@ -68,7 +68,7 @@ resource "kubernetes_deployment_v1" "victorialogs" {
       spec {
         container {
           name              = local.victorialogs_name
-          image             = "victoriametrics/victoria-logs:v1.52.0"
+          image             = "victoriametrics/victoria-logs:v1.53.0"
           image_pull_policy = "IfNotPresent"
 
           args = [
