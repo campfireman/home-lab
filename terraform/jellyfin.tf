@@ -16,6 +16,10 @@ resource "kubernetes_config_map_v1" "jellyfin_config" {
   }
   data = {
     TZ = "Europe/Berlin"
+    JELLYFIN_CONFIG_DIR = "/config"
+    JELLYFIN_DATA_DIR   = "/config/data"
+    JELLYFIN_CACHE_DIR  = "/config/cache"
+    JELLYFIN_LOG_DIR    = "/config/log"
   }
 }
 
@@ -56,7 +60,7 @@ resource "kubernetes_deployment_v1" "jellyfin_deployment" {
       spec {
         container {
           name              = "${local.jellyfin_name}-container"
-          image             = "lscr.io/linuxserver/jellyfin:10.11.11"
+          image             = "jellyfin/jellyfin:12.1"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.jellyfin_port
