@@ -1,0 +1,354 @@
+{
+  "name": "Dithmarschen RSS feeds",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dithmarschen/pressemitteilungen",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000100",
+      "name": "Webhook pressemitteilungen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000200"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dithmarschen/bekanntmachungen",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000101",
+      "name": "Webhook bekanntmachungen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000201"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dithmarschen/ausschreibungen",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000102",
+      "name": "Webhook ausschreibungen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000202"
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dithmarschen/terminkalender",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000103",
+      "name": "Webhook terminkalender",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        600
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000203"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node \"Config\": settings, feed lookup and cache lookup.\n// Change the three constants below to match your setup.\n\nconst BASE_URL = 'https://n8n.home.arpa/webhook/dithmarschen'; // public URL of this workflow's webhook, no trailing slash\nconst USER_AGENT = 'dithmarschen-feed-bot (contact: services+bots@ture.dev)';\nconst CACHE_MINUTES = 45;\nconst MAX_CACHE_ENTRIES = 30; // the ?ort= value creates one cache entry per value\n\nconst FEEDS = {\n  pressemitteilungen: {\n    url: 'https://www.dithmarschen.de/aktuelles/pressemitteilungen',\n    layout: 'news',\n    hrefPart: '/pressemitteilungen/details/news/',\n    title: 'Kreis Dithmarschen: Pressemitteilungen (inoffiziell)',\n    description: 'Inoffizieller Feed. Erzeugt aus der ersten Seite der Pressemitteilungen auf dithmarschen.de.',\n  },\n  bekanntmachungen: {\n    url: 'https://www.dithmarschen.de/aktuelles/bekanntmachungen',\n    layout: 'news',\n    hrefPart: '/fileadmin/download/aktuelles/bekanntmachungen/',\n    yearFromPath: true,\n    title: 'Kreis Dithmarschen: Bekanntmachungen (inoffiziell)',\n    description: 'Inoffizieller Feed. Erzeugt aus der ersten Seite der Bekanntmachungen auf dithmarschen.de. Die Links führen direkt zu PDF-Dateien.',\n  },\n  ausschreibungen: {\n    url: 'https://www.dithmarschen.de/aktuelles/ausschreibungen',\n    layout: 'tender',\n    hrefPart: '/fileadmin/download/aktuelles/ausschreibungen/',\n    title: 'Kreis Dithmarschen: Ausschreibungen (inoffiziell)',\n    description: 'Inoffizieller Feed. Hinweis: Viele Ausschreibungen erscheinen nur auf dem Vergabeportal subreport. Dieser Feed ist deshalb unvollständig.',\n  },\n  terminkalender: {\n    url: 'https://www.dithmarschen.de/aktuelles/terminkalender',\n    layout: 'event',\n    hrefPart: '/terminkalender/ansicht/',\n    title: 'Kreis Dithmarschen: Terminkalender (inoffiziell)',\n    description: 'Inoffizieller Feed. Zeigt die ersten Termine der Liste auf dithmarschen.de. Das Datum der Meldung ist der Zeitpunkt, an dem der Termin zuerst in der Liste stand. Der Termin selbst steht im Titel.',\n  },\n};\n\n// Each feed has its own Webhook node (path dithmarschen/<feed>). Find the one that ran.\nconst feed = Object.keys(FEEDS).find((key) => $(`Webhook ${key}`).isExecuted);\nconst ort = (($input.first().json.query || {}).ort || '').trim().slice(0, 40);\nconst cfg = FEEDS[feed];\n\nif (!cfg) {\n  return [{ json: { needsFetch: false, status: 404, contentType: 'text/plain; charset=utf-8', body: `Unknown feed. Use one of: ${Object.keys(FEEDS).join(', ')}\\n` } }];\n}\n\nconst cacheKey = feed + (ort ? `?ort=${ort.toLowerCase()}` : '');\nconst cache = $getWorkflowStaticData('global').cache || {};\nconst hit = cache[cacheKey];\n\nif (hit && Date.now() - hit.timestamp < CACHE_MINUTES * 60000) {\n  return [{ json: { needsFetch: false, status: 200, contentType: 'application/rss+xml; charset=utf-8', body: hit.xml } }];\n}\n\nreturn [{\n  json: {\n    needsFetch: true,\n    feed, ort, cacheKey, cfg,\n    url: cfg.url,\n    userAgent: USER_AGENT,\n    feedUrl: `${BASE_URL}/${feed}${ort ? `?ort=${encodeURIComponent(ort)}` : ''}`,\n    maxCacheEntries: MAX_CACHE_ENTRIES,\n  },\n}];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "00000000-0000-4000-8000-000000000301",
+      "name": "Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000302-cond",
+              "leftValue": "={{ $json.needsFetch }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000302",
+      "name": "Needs fetch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "={{ $json.userAgent }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000303",
+      "name": "Fetch source page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pure functions: parse the dithmarschen.de list pages and build RSS 2.0.\n// No n8n globals are used here, so test.js can run this file in plain Node.\n// build.js pastes this file into the \"Build feed\" Code node.\n\nconst SITE = 'https://www.dithmarschen.de';\n\nconst MONTHS = { Jan: 1, Feb: 2, 'Mär': 3, Apr: 4, Mai: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Okt: 10, Nov: 11, Dez: 12 };\n\nconst NAMED_ENTITIES = {\n  amp: '&', lt: '<', gt: '>', quot: '\"', apos: \"'\", nbsp: ' ', hellip: '…', ndash: '–', mdash: '—',\n  auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß',\n  laquo: '«', raquo: '»', bdquo: '„', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’',\n};\n\nfunction decodeEntities(s) {\n  return s.replace(/&(#x[0-9a-f]+|#\\d+|[a-z]+);/gi, (m, e) => {\n    if (e[0] === '#') {\n      const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);\n      return String.fromCodePoint(code);\n    }\n    return Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, e) ? NAMED_ENTITIES[e] : m;\n  });\n}\n\n// Remove tags, decode entities, collapse white space.\nfunction text(html) {\n  return decodeEntities(html.replace(/<br\\s*\\/?>/gi, ' ').replace(/<[^>]*>/g, ' ')).replace(/\\s+/g, ' ').trim();\n}\n\n// The n8n Code node sandbox has no URL global. All hrefs on these pages are absolute paths or full URLs.\nfunction absUrl(href) {\n  const h = decodeEntities(href);\n  if (/^https?:\\/\\//.test(h)) return h;\n  return h.startsWith('/') ? SITE + h : `${SITE}/${h}`;\n}\n\nfunction isoToDate(iso) {\n  const [y, m, d] = iso.split('-').map(Number);\n  return new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); // 12:00 UTC: the calendar day stays the same in Europe/Berlin\n}\n\n// Fallback only: the card shows \"01\" and \"Okt\" but no <time datetime>.\nfunction dayMonthToDate(day, mon, year, now) {\n  const month = MONTHS[mon];\n  if (!month) return null;\n  if (year) return new Date(Date.UTC(year, month - 1, Number(day), 12));\n  let date = new Date(Date.UTC(now.getUTCFullYear(), month - 1, Number(day), 12));\n  if (date > now) date = new Date(Date.UTC(now.getUTCFullYear() - 1, month - 1, Number(day), 12));\n  return date;\n}\n\n// Where does each item (card) start in the page? One marker per layout.\nconst CARD_MARKERS = {\n  news: '<div class=\"col align-items-stretch mb-4\">',\n  tender: '<div class=\"article articletype-',\n  event: '<div class=\"teaser-event',\n};\n\nfunction splitCards(html, layout) {\n  const marker = CARD_MARKERS[layout];\n  const starts = [];\n  for (let i = html.indexOf(marker); i !== -1; i = html.indexOf(marker, i + marker.length)) starts.push(i);\n  return starts.map((start, n) => {\n    let end = n + 1 < starts.length ? starts[n + 1] : html.length;\n    const nav = html.indexOf('<div class=\"page-navigation', start);\n    if (nav !== -1 && nav < end) end = nav;\n    return html.slice(start, end);\n  });\n}\n\n// Value of an attribute inside the first <a ...> tag that has the given href.\nfunction anchorAttr(card, href, attr) {\n  const tags = card.match(/<a\\s[^>]*>/g) || [];\n  for (const tag of tags) {\n    if (tag.includes(`href=\"${href}\"`)) {\n      const m = tag.match(new RegExp(`\\\\s${attr}=\"([^\"]*)\"`));\n      if (m) return decodeEntities(m[1]).trim();\n    }\n  }\n  return null;\n}\n\nfunction firstMatch(card, regex) {\n  const m = card.match(regex);\n  return m ? m[1] : null;\n}\n\n// cfg: { layout, hrefPart, ... } from config.js. Returns items in page order.\nfunction parseItems(html, cfg, now = new Date()) {\n  const seen = new Set();\n  const items = [];\n  const warnings = [];\n\n  for (const card of splitCards(html, cfg.layout)) {\n    const rawHref = firstMatch(card, new RegExp(`href=\"([^\"]*${cfg.hrefPart}[^\"]*)\"`));\n    if (!rawHref) continue;\n    const link = absUrl(rawHref);\n    if (seen.has(link)) continue; // image, title and \"mehr Infos\" point to the same target\n    seen.add(link);\n\n    const headline = firstMatch(card, /<span itemprop=\"headline\">([\\s\\S]*?)<\\/span>/);\n    const title = anchorAttr(card, rawHref, 'title') || (headline ? text(headline) : link);\n\n    const item = { title, link, guid: link, guidIsLink: true, description: '', date: null, city: null };\n\n    if (cfg.layout === 'event') {\n      parseEventFields(card, item, rawHref);\n    } else {\n      const iso = firstMatch(card, /<time datetime=\"(\\d{4}-\\d{2}-\\d{2})\"/);\n      if (iso) {\n        item.date = isoToDate(iso);\n      } else {\n        const day = firstMatch(card, /card-date-day[^>]*>(\\d{1,2})</);\n        const mon = firstMatch(card, /card-date-month[^>]*>([^<]+)</);\n        const pathYear = firstMatch(link, /\\/(\\d{4})\\//);\n        if (day && mon) item.date = dayMonthToDate(day, mon.trim(), cfg.layout === 'news' && cfg.yearFromPath ? Number(pathYear) : null, now);\n        warnings.push(`no <time datetime> for ${link}, used fallback`);\n      }\n      const desc = firstMatch(card, /<div itemprop=\"description\">([\\s\\S]*?)<\\/div>/);\n      if (desc) {\n        let d = text(desc);\n        if (d.startsWith(title)) d = d.slice(title.length).trim(); // some teasers repeat the title\n        item.description = d;\n      }\n      if (item.date && item.date.getTime() > now.getTime() + 86400000) warnings.push(`date in the future: ${link}`);\n      if (cfg.yearFromPath) {\n        const pathYear = firstMatch(link, /\\/(\\d{4})\\//);\n        if (item.date && pathYear && item.date.getUTCFullYear() !== Number(pathYear)) {\n          warnings.push(`year differs from URL year (${pathYear}): ${link}`);\n        }\n      }\n    }\n    items.push(item);\n  }\n  return { items, warnings };\n}\n\nfunction parseEventFields(card, item, rawHref) {\n  const id = firstMatch(rawHref, /-(\\d+)$/);\n  if (id) {\n    item.guid = id;\n    item.guidIsLink = false;\n  }\n  const headline = firstMatch(card, /<span itemprop=\"headline\">([\\s\\S]*?)<\\/span>/);\n  const name = headline ? text(headline) : item.title;\n  item.city = text(firstMatch(card, /<span class=\"card-place[^>]*>([\\s\\S]*?)<\\/span>/) || '');\n  const organizer = text(firstMatch(card, /<p class=\"organizer[^>]*>([\\s\\S]*?)<\\/p>/) || '');\n  const when = text(firstMatch(card, /<div class=\"card-body\">([\\s\\S]*?)<\\/div>/) || ''); // \"Sonntag, 04.10.2026 09:00 Uhr - 13:00 Uhr\"\n  const day = when.match(/(\\d{2})\\.(\\d{2})\\.(\\d{4})/);\n  const time = when.match(/(\\d{2}:\\d{2}) Uhr/);\n  const dateText = day ? `${day[1]}.${day[2]}.${day[3]}` : '';\n  item.title = [item.city ? `[${item.city}]` : '', dateText, time ? time[1] : '', ].filter(Boolean).join(' ') + ` - ${name}`;\n  item.description = [`Wann: ${when || 'unbekannt'}`, item.city ? `Ort: ${item.city}` : '', organizer ? `Veranstalter: ${organizer}` : '']\n    .filter(Boolean).join('. ');\n}\n\nfunction filterByCity(items, ort) {\n  const wanted = (ort || '').trim().toLowerCase();\n  if (!wanted) return items;\n  return items.filter((i) => (i.city || '').toLowerCase().includes(wanted));\n}\n\n// ---- RSS 2.0 ----\n\nfunction stripInvalidXmlChars(s) {\n  return s.replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/g, '');\n}\n\nfunction escapeXml(s) {\n  return stripInvalidXmlChars(String(s))\n    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&apos;');\n}\n\nfunction cdata(s) {\n  return `<![CDATA[${stripInvalidXmlChars(String(s)).replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;\n}\n\nfunction buildRss({ feedUrl, channel, items, now = new Date() }) {\n  const out = [];\n  out.push('<?xml version=\"1.0\" encoding=\"UTF-8\"?>');\n  out.push('<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">');\n  out.push('<channel>');\n  out.push(`<title>${escapeXml(channel.title)}</title>`);\n  out.push(`<link>${escapeXml(channel.link)}</link>`);\n  out.push(`<description>${escapeXml(channel.description)}</description>`);\n  out.push('<language>de</language>');\n  out.push(`<lastBuildDate>${now.toUTCString()}</lastBuildDate>`);\n  out.push(`<atom:link href=\"${escapeXml(feedUrl)}\" rel=\"self\" type=\"application/rss+xml\"/>`);\n  for (const i of items) {\n    out.push('<item>');\n    out.push(`<title>${escapeXml(i.title)}</title>`);\n    out.push(`<link>${escapeXml(i.link)}</link>`);\n    out.push(`<guid isPermaLink=\"${i.guidIsLink}\">${escapeXml(i.guid)}</guid>`);\n    if (i.pubDate) out.push(`<pubDate>${i.pubDate.toUTCString()}</pubDate>`);\n    if (i.description) out.push(`<description>${cdata(i.description)}</description>`);\n    out.push('</item>');\n  }\n  out.push('</channel>');\n  out.push('</rss>');\n  return out.join('\\n') + '\\n';\n}\n\n\n// Code node \"Build feed\": uses the functions from lib.js (pasted above this code by build.js).\n// Input: the HTTP Request result. Output: { status, contentType, body, failed }.\n\nconst ctx = $('Config').first().json;\nconst store = $getWorkflowStaticData('global');\nstore.cache = store.cache || {};\nstore.seen = store.seen || {};\n\nconst RSS_TYPE = 'application/rss+xml; charset=utf-8';\n\n// Failure: send the old XML if we have one (even if stale), else 502.\nfunction fail(reason) {\n  console.log(`[dithmarschen] ${ctx.feed}: ${reason}`);\n  const stale = store.cache[ctx.cacheKey];\n  if (stale) return [{ json: { failed: true, reason, status: 200, contentType: RSS_TYPE, body: stale.xml } }];\n  return [{ json: { failed: true, reason, status: 502, contentType: 'text/plain; charset=utf-8', body: `Could not read the source page: ${reason}\\n` } }];\n}\n\nconst res = $input.first().json;\nif (res.statusCode !== 200) return fail(`source answered HTTP ${res.statusCode}`);\n\nlet items, warnings;\ntry {\n  ({ items, warnings } = parseItems(String(res.body ?? res.data ?? ''), ctx.cfg));\n} catch (e) {\n  return fail(`parse error: ${e.message}`);\n}\nif (items.length === 0) return fail('no items found, page layout may have changed');\nfor (const w of warnings) console.log(`[dithmarschen] ${ctx.feed}: ${w}`);\n\nconst now = new Date();\n\nif (ctx.cfg.layout === 'event') {\n  // Event date is not the publication date. Use the time we first saw the event.\n  for (const i of items) {\n    if (!store.seen[i.guid]) store.seen[i.guid] = now.toISOString();\n    i.date = new Date(store.seen[i.guid]);\n  }\n  // Forget events that were not on page 1 for 60 days, so the map stays small.\n  const onPage = new Set(items.map((i) => i.guid));\n  for (const [guid, ts] of Object.entries(store.seen)) {\n    if (!onPage.has(guid) && now - new Date(ts) > 60 * 86400000) delete store.seen[guid];\n  }\n  items = filterByCity(items, ctx.ort);\n}\n\nfor (const i of items) i.pubDate = i.date;\n\nconst xml = buildRss({\n  feedUrl: ctx.feedUrl,\n  channel: { title: ctx.cfg.title, link: ctx.cfg.url, description: ctx.cfg.description },\n  items,\n  now,\n});\n\nstore.cache[ctx.cacheKey] = { timestamp: now.getTime(), xml };\n// Keep the cache small: drop the oldest entries.\nconst keys = Object.keys(store.cache).sort((a, b) => store.cache[a].timestamp - store.cache[b].timestamp);\nfor (const k of keys.slice(0, Math.max(0, keys.length - ctx.maxCacheEntries))) delete store.cache[k];\n\nreturn [{ json: { failed: false, status: 200, contentType: RSS_TYPE, body: xml } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "00000000-0000-4000-8000-000000000304",
+      "name": "Build feed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "={{ $json.contentType }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000305",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000306-cond",
+              "leftValue": "={{ $json.failed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000306",
+      "name": "Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        100
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "00000000-0000-4000-8000-000000000307",
+      "name": "Notify (wire up later)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        0
+      ],
+      "notes": "Replace this node with a mail, chat or push node. $json.reason tells what failed."
+    }
+  ],
+  "connections": {
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Needs fetch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs fetch?": {
+      "main": [
+        [
+          {
+            "node": "Fetch source page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch source page": {
+      "main": [
+        [
+          {
+            "node": "Build feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build feed": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed?": {
+      "main": [
+        [
+          {
+            "node": "Notify (wire up later)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Webhook pressemitteilungen": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook bekanntmachungen": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook ausschreibungen": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook terminkalender": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
