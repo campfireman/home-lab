@@ -1,0 +1,270 @@
+{
+  "name": "Heide RSS feed",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "heide/alle-artikel",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000400",
+      "name": "Webhook alle-artikel",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "00000000-0000-4000-8000-000000000401"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node \"Config\": settings and cache lookup.\n// Change the constants below to match your setup.\n\nconst BASE_URL = 'https://n8n.home.arpa/webhook/heide'; // public URL of this workflow's webhook, no trailing slash\nconst USER_AGENT = 'heide-feed-bot (contact: services+bots@ture.dev)';\nconst CACHE_MINUTES = 45;\n\nconst FEED = {\n  name: 'alle-artikel',\n  url: 'https://www.heide.de/alle-artikel.html',\n  title: 'Stadt Heide: Alle Artikel (inoffiziell)',\n  description: 'Inoffizieller Feed. Erzeugt aus der ersten Seite der Artikelliste auf heide.de.',\n};\n\nconst cacheKey = FEED.name;\nconst cache = $getWorkflowStaticData('global').cache || {};\nconst hit = cache[cacheKey];\n\nif (hit && Date.now() - hit.timestamp < CACHE_MINUTES * 60000) {\n  return [{ json: { needsFetch: false, status: 200, contentType: 'application/rss+xml; charset=utf-8', body: hit.xml } }];\n}\n\nreturn [{\n  json: {\n    needsFetch: true,\n    feed: FEED.name,\n    cacheKey,\n    cfg: FEED,\n    url: FEED.url,\n    userAgent: USER_AGENT,\n    feedUrl: `${BASE_URL}/${FEED.name}`,\n  },\n}];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "00000000-0000-4000-8000-000000000402",
+      "name": "Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000403-cond",
+              "leftValue": "={{ $json.needsFetch }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000403",
+      "name": "Needs fetch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "={{ $json.userAgent }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000404",
+      "name": "Fetch source page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pure functions: parse the heide.de article list and build RSS 2.0.\n// No n8n globals are used here, so test.js can run this file in plain Node.\n// build.js pastes this file into the \"Build feed\" Code node.\n// The helper functions (decodeEntities, text, escapeXml, cdata, buildRss) are copies of\n// ../../dithmarschen-feeds/src/lib.js. Code nodes cannot import files.\n\nconst SITE = 'https://www.heide.de';\n\nconst MONTHS = {\n  januar: 1, jan: 1, februar: 2, feb: 2, 'märz': 3, 'mär': 3, maerz: 3, april: 4, apr: 4, mai: 5,\n  juni: 6, jun: 6, juli: 7, jul: 7, august: 8, aug: 8, september: 9, sep: 9,\n  oktober: 10, okt: 10, november: 11, nov: 11, dezember: 12, dez: 12,\n};\n\nconst NAMED_ENTITIES = {\n  amp: '&', lt: '<', gt: '>', quot: '\"', apos: \"'\", nbsp: ' ', hellip: '…', ndash: '–', mdash: '—',\n  auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß',\n  laquo: '«', raquo: '»', bdquo: '„', ldquo: '“', rdquo: '”', lsquo: '‘', rsquo: '’',\n};\n\nfunction decodeEntities(s) {\n  return s.replace(/&(#x[0-9a-f]+|#\\d+|[a-z]+);/gi, (m, e) => {\n    if (e[0] === '#') {\n      const code = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);\n      return String.fromCodePoint(code);\n    }\n    return Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, e) ? NAMED_ENTITIES[e] : m;\n  });\n}\n\n// Remove tags, decode entities, collapse white space.\nfunction text(html) {\n  return decodeEntities(html.replace(/<br\\s*\\/?>/gi, ' ').replace(/<[^>]*>/g, ' ')).replace(/\\s+/g, ' ').trim();\n}\n\n// The n8n Code node sandbox has no URL global. All hrefs on this page are absolute paths.\nfunction absUrl(href) {\n  const h = decodeEntities(href);\n  if (/^https?:\\/\\//.test(h)) return h;\n  return h.startsWith('/') ? SITE + h : `${SITE}/${h}`;\n}\n\n// \"29.\" \"September\" \"2026\" -> 12:00 UTC on that day. Returns null if a part is wrong.\nfunction germanDate(day, monthName, year) {\n  const d = parseInt(day, 10);\n  const m = MONTHS[String(monthName).toLowerCase().replace(/\\.$/, '')];\n  const y = parseInt(year, 10);\n  if (!d || !m || !y) return null;\n  return new Date(Date.UTC(y, m - 1, d, 12, 0, 0)); // 12:00 UTC: the calendar day stays the same in Europe/Berlin\n}\n\nconst CARD_MARKER = '<a itemprop=\"url\" class=\"newsLink';\n\nfunction splitCards(html) {\n  const pager = html.indexOf('<ul class=\"f3-widget-paginator'); // the last card must not include the pager\n  const page = pager === -1 ? html : html.slice(0, pager);\n  const starts = [];\n  for (let i = page.indexOf(CARD_MARKER); i !== -1; i = page.indexOf(CARD_MARKER, i + CARD_MARKER.length)) starts.push(i);\n  return starts.map((start, n) => page.slice(start, n + 1 < starts.length ? starts[n + 1] : page.length));\n}\n\nfunction firstMatch(card, regex) {\n  const m = card.match(regex);\n  return m ? m[1] : null;\n}\n\n// Returns items in page order (newest first).\nfunction parseItems(html, now = new Date()) {\n  const seen = new Set();\n  const items = [];\n  const warnings = [];\n\n  for (const card of splitCards(html)) {\n    const rawHref = firstMatch(card, /href=\"(\\/artikelansicht\\/[^\"]*)\"/);\n    if (!rawHref) continue;\n    const link = absUrl(rawHref);\n    if (seen.has(link)) {\n      warnings.push(`duplicate link: ${link}`);\n      continue;\n    }\n    seen.add(link);\n\n    const headline = firstMatch(card, /<h2 class=\"newsTitle[^>]*>([\\s\\S]*?)<\\/h2>/);\n    const attr = firstMatch(card, /\\stitle=\"([^\"]*)\"/);\n    const title = headline ? text(headline)\n      : attr ? decodeEntities(attr).replace(/^Den Artikel '/, '').replace(/' lesen$/, '').trim()\n      : link;\n\n    // Date: three <span> tags with \"29.\" / \"September\" / \"2026\".\n    const spans = [...card.matchAll(/<span class=\"text-small fw-bold[^>]*>([\\s\\S]*?)<\\/span>/g)].map((m) => text(m[1]));\n    const date = spans.length >= 3 ? germanDate(spans[0], spans[1], spans[2]) : null;\n    if (!date) warnings.push(`no date for ${link}`);\n    else if (date.getTime() > now.getTime() + 86400000) warnings.push(`date in the future: ${link}`);\n\n    items.push({ title, link, guid: link, guidIsLink: true, description: '', date });\n  }\n  return { items, warnings };\n}\n\n// ---- RSS 2.0 ----\n\nfunction stripInvalidXmlChars(s) {\n  return s.replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]/g, '');\n}\n\nfunction escapeXml(s) {\n  return stripInvalidXmlChars(String(s))\n    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&apos;');\n}\n\nfunction cdata(s) {\n  return `<![CDATA[${stripInvalidXmlChars(String(s)).replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;\n}\n\nfunction buildRss({ feedUrl, channel, items, now = new Date() }) {\n  const out = [];\n  out.push('<?xml version=\"1.0\" encoding=\"UTF-8\"?>');\n  out.push('<rss version=\"2.0\" xmlns:atom=\"http://www.w3.org/2005/Atom\">');\n  out.push('<channel>');\n  out.push(`<title>${escapeXml(channel.title)}</title>`);\n  out.push(`<link>${escapeXml(channel.link)}</link>`);\n  out.push(`<description>${escapeXml(channel.description)}</description>`);\n  out.push('<language>de</language>');\n  out.push(`<lastBuildDate>${now.toUTCString()}</lastBuildDate>`);\n  out.push(`<atom:link href=\"${escapeXml(feedUrl)}\" rel=\"self\" type=\"application/rss+xml\"/>`);\n  for (const i of items) {\n    out.push('<item>');\n    out.push(`<title>${escapeXml(i.title)}</title>`);\n    out.push(`<link>${escapeXml(i.link)}</link>`);\n    out.push(`<guid isPermaLink=\"${i.guidIsLink}\">${escapeXml(i.guid)}</guid>`);\n    if (i.pubDate) out.push(`<pubDate>${i.pubDate.toUTCString()}</pubDate>`);\n    if (i.description) out.push(`<description>${cdata(i.description)}</description>`);\n    out.push('</item>');\n  }\n  out.push('</channel>');\n  out.push('</rss>');\n  return out.join('\\n') + '\\n';\n}\n\n\n// Code node \"Build feed\": uses the functions from lib.js (pasted above this code by build.js).\n// Input: the HTTP Request result. Output: { status, contentType, body, failed }.\n\nconst ctx = $('Config').first().json;\nconst store = $getWorkflowStaticData('global');\nstore.cache = store.cache || {};\n\nconst RSS_TYPE = 'application/rss+xml; charset=utf-8';\n\n// Failure: send the old XML if we have one (even if stale), else 502.\nfunction fail(reason) {\n  console.log(`[heide] ${ctx.feed}: ${reason}`);\n  const stale = store.cache[ctx.cacheKey];\n  if (stale) return [{ json: { failed: true, reason, status: 200, contentType: RSS_TYPE, body: stale.xml } }];\n  return [{ json: { failed: true, reason, status: 502, contentType: 'text/plain; charset=utf-8', body: `Could not read the source page: ${reason}\\n` } }];\n}\n\nconst res = $input.first().json;\nif (res.statusCode !== 200) return fail(`source answered HTTP ${res.statusCode}`);\n\nlet items, warnings;\ntry {\n  ({ items, warnings } = parseItems(String(res.body ?? res.data ?? '')));\n} catch (e) {\n  return fail(`parse error: ${e.message}`);\n}\nif (items.length === 0) return fail('no items found, page layout may have changed');\nfor (const w of warnings) console.log(`[heide] ${ctx.feed}: ${w}`);\n\nconst now = new Date();\nfor (const i of items) i.pubDate = i.date;\n\nconst xml = buildRss({\n  feedUrl: ctx.feedUrl,\n  channel: { title: ctx.cfg.title, link: ctx.cfg.url, description: ctx.cfg.description },\n  items,\n  now,\n});\n\nstore.cache[ctx.cacheKey] = { timestamp: now.getTime(), xml };\n\nreturn [{ json: { failed: false, status: 200, contentType: RSS_TYPE, body: xml } }];\n",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "00000000-0000-4000-8000-000000000405",
+      "name": "Build feed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.status }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "={{ $json.contentType }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "00000000-0000-4000-8000-000000000406",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "00000000-0000-4000-8000-000000000407-cond",
+              "leftValue": "={{ $json.failed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "00000000-0000-4000-8000-000000000407",
+      "name": "Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        100
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "00000000-0000-4000-8000-000000000408",
+      "name": "Notify (wire up later)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        0
+      ],
+      "notes": "Replace this node with a mail, chat or push node. $json.reason tells what failed."
+    }
+  ],
+  "connections": {
+    "Webhook alle-artikel": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Needs fetch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs fetch?": {
+      "main": [
+        [
+          {
+            "node": "Fetch source page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch source page": {
+      "main": [
+        [
+          {
+            "node": "Build feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build feed": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed?": {
+      "main": [
+        [
+          {
+            "node": "Notify (wire up later)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}
