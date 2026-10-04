@@ -3,6 +3,42 @@
   "extends": ["config:recommended"],
   "prConcurrentLimit": 0,
   "prHourlyLimit": 0,
+  "fetchChangeLogs": "pr",
+  "prBodyNotes": ["Read the release notes above for breaking changes before you merge."],
+  "packageRules": [
+    {
+      "matchPackageNames": ["homeassistant/home-assistant"],
+      "sourceUrl": "https://github.com/home-assistant/core"
+    },
+    {
+      "matchPackageNames": ["ghcr.io/music-assistant/server"],
+      "sourceUrl": "https://github.com/music-assistant/server"
+    },
+    {
+      "matchPackageNames": ["pihole/pihole"],
+      "sourceUrl": "https://github.com/pi-hole/docker-pi-hole"
+    },
+    {
+      "matchPackageNames": ["quay.io/prometheus/node-exporter"],
+      "sourceUrl": "https://github.com/prometheus/node_exporter"
+    },
+    {
+      "matchPackageNames": ["prometheuscommunity/smartctl-exporter"],
+      "sourceUrl": "https://github.com/prometheus-community/smartctl_exporter"
+    },
+    {
+      "matchPackageNames": ["kubernetesui/dashboard"],
+      "sourceUrl": "https://github.com/kubernetes/dashboard"
+    },
+    {
+      "matchPackageNames": ["kubernetesui/metrics-scraper"],
+      "sourceUrl": "https://github.com/kubernetes-sigs/dashboard-metrics-scraper"
+    },
+    {
+      "matchPackageNames": ["registry.home.arpa/go-tube"],
+      "sourceUrl": "https://gitlab.com/CampFireMan/go-tube"
+    }
+  ],
   "customManagers": [
     {
       "customType": "regex",
