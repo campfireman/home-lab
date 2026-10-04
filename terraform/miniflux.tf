@@ -25,6 +25,36 @@ resource "kubernetes_config_map_v1" "miniflux_config" {
   }
 }
 
+# The cluster's internal-issuer root CA (public certificate, no key). Miniflux
+# needs it to verify INTERNAL_TLS hosts such as n8n when it sends webhooks.
+# Same PEM as renovate_internal_ca in renovate.tf. Update both on CA rotation.
+resource "kubernetes_config_map_v1" "miniflux_internal_ca" {
+  metadata {
+    name      = "miniflux-internal-ca"
+    namespace = kubernetes_namespace_v1.miniflux.metadata[0].name
+  }
+  data = {
+    "internal-ca.pem" = <<-EOT
+      -----BEGIN CERTIFICATE-----
+      MIICjDCCAhKgAwIBAgIUJUMXJ4pmlhpSg/7GMkq0YoJr/AcwCgYIKoZIzj0EAwIw
+      fTELMAkGA1UEBhMCREUxDDAKBgNVBAgMA0hBTTEMMAoGA1UEBwwDSEFNMQ4wDAYD
+      VQQKDAV0X25ldDELMAkGA1UECwwCSVQxFjAUBgNVBAMMDVR1cmUgQ2xhdXNzZW4x
+      HTAbBgkqhkiG9w0BCQEWDmFkbWluQHR1cmUuZGV2MB4XDTIzMDYyNzA4Mzc0N1oX
+      DTMzMDYyNDA4Mzc0N1owfTELMAkGA1UEBhMCREUxDDAKBgNVBAgMA0hBTTEMMAoG
+      A1UEBwwDSEFNMQ4wDAYDVQQKDAV0X25ldDELMAkGA1UECwwCSVQxFjAUBgNVBAMM
+      DVR1cmUgQ2xhdXNzZW4xHTAbBgkqhkiG9w0BCQEWDmFkbWluQHR1cmUuZGV2MHYw
+      EAYHKoZIzj0CAQYFK4EEACIDYgAElQTGRRskNUi+ojjJHCcmcFTN7zl1qqHsnIlI
+      LDJJLK5kM9PJdZCe4Ebvtz6SKPj1WiPgJ6hWcPbOFJyokUpDHYb4HfHqrcGCD87q
+      87CZnY1MUpFH1Cxy8fCpdj9Iern4o1MwUTAdBgNVHQ4EFgQU4ZIfpfVYB0DrWBPZ
+      wBTTpxHvCaswHwYDVR0jBBgwFoAU4ZIfpfVYB0DrWBPZwBTTpxHvCaswDwYDVR0T
+      AQH/BAUwAwEB/zAKBggqhkjOPQQDAgNoADBlAjEAp3N//h2LlYme1UL1sIaU2Lat
+      6ArETULdXWIgzRlH/LK3+1tKovTeP7MfQ5Bel54HAjAcvwP88+mDnCqR1krpoysW
+      S3k2AWMMEkk1Bdr7J2yEhXF1+7i5GUZS1vdIXj1NM4Y=
+      -----END CERTIFICATE-----
+    EOT
+  }
+}
+
 resource "kubernetes_secret_v1" "miniflux_secrets" {
   metadata {
     name      = "miniflux-secrets"
@@ -84,6 +114,17 @@ resource "kubernetes_deployment_v1" "miniflux" {
             }
           }
 
+          env {
+            name  = "SSL_CERT_FILE"
+            value = "/etc/ssl/internal/internal-ca.pem"
+          }
+
+          volume_mount {
+            name       = "internal-ca"
+            mount_path = "/etc/ssl/internal"
+            read_only  = true
+          }
+
           readiness_probe {
             http_get {
               path = "/"
@@ -105,6 +146,13 @@ resource "kubernetes_deployment_v1" "miniflux" {
             failure_threshold     = 3
             success_threshold     = 1
             timeout_seconds       = 1
+          }
+        }
+
+        volume {
+          name = "internal-ca"
+          config_map {
+            name = kubernetes_config_map_v1.miniflux_internal_ca.metadata[0].name
           }
         }
       }
