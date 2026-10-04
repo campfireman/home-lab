@@ -3,3 +3,13 @@
   apt:
     name: python3-kubernetes
     state: present
+
+# The default of 128 inotify instances is too low for many pods on one node.
+# Jellyfin 12 crashes at start when the limit is reached.
+- name: Increase inotify instance limit
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_instances
+    value: "1024"
+    state: present
+    sysctl_set: true
+    reload: true
