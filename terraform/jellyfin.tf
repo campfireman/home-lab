@@ -60,7 +60,7 @@ resource "kubernetes_deployment_v1" "jellyfin_deployment" {
       spec {
         container {
           name              = "${local.jellyfin_name}-container"
-          image             = "jellyfin/jellyfin:12.1"
+          image             = "jellyfin/jellyfin:12.2"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.jellyfin_port
