@@ -88,7 +88,7 @@ resource "kubernetes_deployment_v1" "blackbox_exporter" {
       spec {
         container {
           name  = "blackbox-exporter"
-          image = "prom/blackbox-exporter:v0.28.0"
+          image = "prom/blackbox-exporter:v0.29.0"
           
           args = [
             "--config.file=/etc/blackbox_exporter/blackbox.yml"
