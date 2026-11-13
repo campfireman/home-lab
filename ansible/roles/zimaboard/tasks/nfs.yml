@@ -31,7 +31,8 @@
     state: directory
     owner: nobody
     group: nogroup
-    mode: '0755'
+    mode: 'u=rwX,g=rX,o=rX'
+    recurse: true
 
 - name: Setup NFS YouTube Video Directory
   ansible.builtin.file:
@@ -39,7 +40,8 @@
     state: directory
     owner: nobody
     group: nogroup
-    mode: '0755'
+    mode: 'u=rwX,g=rX,o=rX'
+    recurse: true
 
 - name: Setup NFS Export Configuration
   ansible.builtin.template:
