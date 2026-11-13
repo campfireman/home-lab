@@ -42,9 +42,6 @@ deploy-master-infra: install-requirements
 deploy-zimaboard: install-requirements
 	$(call playbook_with_tag,zimaboard)
 
-deploy-banana-thinkpad: install-requirements
-	$(call playbook_with_tag,banana-thinkpad)
-
 deploy-picam: install-requirements
 	$(call playbook_with_tag,picam)
 
