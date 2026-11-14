@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# Home Assistant keeps all recorder data in the shared Postgres on elmaestro.
+# Terraform creates the database and role (terraform/home_assistant.tf).
+db_url: "postgresql://home_assistant:{{ ha_recorder_db_password | urlencode }}@{{ ha_recorder_db_host }}:{{ ha_recorder_db_port }}/home_assistant"
+auto_purge: false

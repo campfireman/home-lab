@@ -1,6 +1,7 @@
 locals {
   postgres_name                  = "postgres"
   postgres_port                  = 5432
+  postgres_node_port             = 30432
   postgres_shared_data_directory = "postgres_shared_database"
   postgres_version               = "18.3"
 }
@@ -75,6 +76,9 @@ resource "kubernetes_service_v1" "postgres_service" {
     port {
       port        = local.postgres_port
       target_port = local.postgres_port
+      # Fixed so that Home Assistant on zimaboard and the postgresql provider
+      # can reach Postgres from outside the cluster.
+      node_port = local.postgres_node_port
     }
   }
 }

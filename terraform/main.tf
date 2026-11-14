@@ -24,6 +24,10 @@ terraform {
       source  = "grafana/grafana"
       version = "4.45.1"
     }
+    postgresql = {
+      source  = "cyrilgdn/postgresql"
+      version = "1.27.0"
+    }
   }
 }
 
@@ -53,6 +57,18 @@ provider "pihole" {
   # Pi-hole sets the API token to the admin password hashed twiced via SHA-256
   # api_token = sha256(sha256(data.sops_file.secrets.data["pihole_admin_password"]))
   password = data.sops_file.secrets.data["pihole_admin_password"]
+}
+
+# This provider needs the running Postgres from postgres.tf. On a fresh
+# cluster the first apply fails until Postgres runs. The planned split into
+# Terraform layers removes this ordering problem.
+provider "postgresql" {
+  host            = local.master_node_ip
+  port            = local.postgres_node_port
+  username        = data.sops_file.secrets.data["postgres_shared_username"]
+  password        = data.sops_file.secrets.data["postgres_shared_password"]
+  sslmode         = "disable"
+  connect_timeout = 15
 }
 
 provider "grafana" {

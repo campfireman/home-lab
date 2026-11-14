@@ -1,0 +1,21 @@
+# {{ ansible_managed }}
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# Keeps all history in the shared Postgres on elmaestro.
+recorder: !include recorder.yaml
+
+sensor:
+  - platform: time_date
+    display_options:
+      - 'date_time_iso'
+      - 'date'

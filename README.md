@@ -32,7 +32,7 @@ flowchart TD
     pgadmin --> postgres
     membrane --> ollama
     open-webui --> ollama
-    homeassistant --> influxDB
+    homeassistant --> postgres
     homeassistant --> mosquitto
     jellyfin
     grafana --> loki

@@ -212,6 +212,27 @@ resource "grafana_data_source" "victorialogs" {
   access_mode = "proxy"
 }
 
+resource "grafana_data_source" "home_assistant" {
+  provider = grafana
+
+  type     = "grafana-postgresql-datasource"
+  name     = "home-assistant"
+  url      = "${kubernetes_service_v1.postgres_service.metadata[0].name}.${kubernetes_namespace_v1.postgres.metadata[0].name}.svc.cluster.local:${local.postgres_port}"
+  username = postgresql_role.ha_reader.name
+
+  access_mode = "proxy"
+
+  json_data_encoded = jsonencode({
+    database        = postgresql_database.ha.name
+    sslmode         = "disable"
+    postgresVersion = 1800
+  })
+
+  secure_json_data_encoded = jsonencode({
+    password = data.sops_file.secrets.data["postgres_home_assistant_reader_password"]
+  })
+}
+
 resource "grafana_contact_point" "contact_point_home_assistant" {
   name = "HomeAssistant"
 

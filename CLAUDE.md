@@ -58,7 +58,6 @@ Keep these in mind. Prefer solutions that fit the guiding principles above.
 
 - Observability of workloads aside from logs like resource metrics, tracing etc.
 - Set up a new node with OPNsense. It will replace the current ASUS router.
-- Add long-term storage for Home Assistant data.
 - Add more workloads that give value at home.
 - Review security, with a focus on agentic AI attackers.
 

@@ -13,6 +13,19 @@
     mode: "0640"
   become: false
 
+- name: Copy Home Assistant recorder config.
+  ansible.builtin.template:
+    src: templates/home-assistant-recorder.yaml.j2
+    dest: "{{ config_dir }}/home-assistant/config/recorder.yaml"
+    mode: "0600"
+  no_log: true
+
+- name: Copy Home Assistant configuration.
+  ansible.builtin.template:
+    src: templates/home-assistant-configuration.yaml.j2
+    dest: "{{ config_dir }}/home-assistant/config/configuration.yaml"
+    mode: "0644"
+
 - name: Deploy and run Home Assistant
   community.docker.docker_compose_v2:
     project_src: "{{ config_dir }}/home-assistant"

@@ -9,6 +9,9 @@ docker_network_name: "main_network"
 
 ha_version: "2026.11.1"
 ha_port: 8123
+ha_recorder_db_host: "192.168.1.102"
+ha_recorder_db_port: 30432
+ha_recorder_db_password: "{{ lookup('community.sops.sops', playbook_dir ~ '/../terraform/secrets.enc.json', extract='[\"postgres_home_assistant_password\"]') }}"
 
 music_assistant_version: "2.10.5"
 
