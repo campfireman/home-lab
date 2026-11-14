@@ -101,7 +101,10 @@
     },
     {
       "matchPackageNames": ["registry.home.arpa/go-tube"],
-      "sourceUrl": "https://gitlab.com/CampFireMan/go-tube"
+      "sourceUrl": "https://gitlab.com/CampFireMan/go-tube",
+      "automerge": true,
+      "automergeType": "branch",
+      "ignoreTests": true
     }
   ],
   "customManagers": [
@@ -114,7 +117,7 @@
       "depNameTemplate": "go-tube",
       "packageNameTemplate": "registry.home.arpa/go-tube",
       "datasourceTemplate": "docker",
-      "versioningTemplate": "loose"
+      "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{2})\\.(?<patch>\\d{2})-(?<build>\\d+)-[0-9a-f]+$"
     },
     {
       "customType": "regex",

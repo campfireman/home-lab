@@ -2,7 +2,9 @@ locals {
   go_tube_name = "go-tube"
   go_tube_port = 8080
   # Bumped automatically by Renovate (see renovate.json's customManagers)
-  # whenever go-tube's CI publishes a newer immutable tag.
+  # whenever go-tube's CI publishes a newer release tag. Renovate pushes the
+  # bump straight to master with no MR, which triggers terraform-apply. To
+  # roll back, revert that Renovate commit.
   go_tube_tag = "2026.10.26-55cf83b0"
 }
 

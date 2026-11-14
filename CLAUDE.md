@@ -36,7 +36,12 @@ Secrets use `sops`. Never put a plain secret value in a commit, in chat output, 
 
 ## CI/CD
 
-GitLab CI runs one job: `terraform-apply`. It runs on a self-hosted runner inside the cluster. It triggers on push to `master` when Terraform files change, and once a day to fix drift. There is no CI for Ansible yet.
+GitLab CI runs two jobs. Both run on a self-hosted runner inside the cluster:
+
+- `terraform-apply`: runs on push to `master` when Terraform files change, and once a day to fix drift.
+- `ansible-deploy`: runs on push to `master` when Ansible files change, and once a day to fix drift.
+
+Renovate runs in the cluster every 30 minutes. For the go-tube image, Renovate merges the update directly to `master` with no MR. This push starts `terraform-apply`, so a new go-tube release deploys with no manual step. For all other updates, Renovate opens an MR.
 
 ## Known issues and active work
 

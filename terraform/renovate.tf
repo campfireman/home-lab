@@ -71,7 +71,10 @@ resource "kubernetes_cron_job_v1" "renovate" {
   }
 
   spec {
-    schedule                      = "0 */4 * * *"
+    # Every 30 minutes, not every few hours: go-tube image bumps automerge
+    # straight to master (renovate.json), so this schedule is the main
+    # delay between a go-tube release and its deploy.
+    schedule                      = "*/30 * * * *"
     concurrency_policy            = "Forbid"
     successful_jobs_history_limit = 3
     failed_jobs_history_limit     = 3
