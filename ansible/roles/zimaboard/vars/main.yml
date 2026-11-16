@@ -7,7 +7,7 @@ config_dir: "/home/{{ ansible_user }}"
 
 docker_network_name: "main_network"
 
-ha_version: "2026.11.1"
+ha_version: "2026.11.2"
 ha_port: 8123
 ha_recorder_db_host: "192.168.1.102"
 ha_recorder_db_port: 30432
