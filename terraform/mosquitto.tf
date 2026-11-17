@@ -66,7 +66,7 @@ resource "kubernetes_deployment_v1" "mosquitto_deployment" {
       spec {
         container {
           name              = "${local.service_name}-container"
-          image             = "eclipse-mosquitto:2.0.22"
+          image             = "eclipse-mosquitto:2.0.23"
           image_pull_policy = "IfNotPresent"
           port {
             container_port = local.port
