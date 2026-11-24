@@ -266,7 +266,7 @@ resource "kubernetes_daemon_set_v1" "fluentbit" {
 
         container {
           name              = local.fluentbit_name
-          image             = "fluent/fluent-bit:5.2.0"
+          image             = "fluent/fluent-bit:5.2.1"
           image_pull_policy = "IfNotPresent"
 
           resources {
